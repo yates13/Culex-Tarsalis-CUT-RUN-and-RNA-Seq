@@ -27,7 +27,7 @@ module purge
 
 # Load conda
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${SCRATCH}/miniconda3" >&2; exit 1; }
-conda activate rnaPseudo || { echo "ERROR: conda activate rnaPseudo failed" >&2; exit 1; }
+conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean || { echo "ERROR: conda activate rnaPseudo_clean failed" >&2; exit 1; }
 
 set -eo pipefail
 

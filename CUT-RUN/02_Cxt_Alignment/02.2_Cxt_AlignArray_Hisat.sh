@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -8,10 +7,10 @@
 #SBATCH --qos=cpu-normal
 #SBATCH --partition=acpu
 #SBATCH --job-name=HisatArrayCxt
-#SBATCH --mail-user=shawn.yates@colostate.edu
+#SBATCH --mail-user=shawn.yates@colostate.edu  # Change to your email
 #SBATCH --mail-type=all
-#SBATCH --output=slurm_logs/%x.%A-%a.log
-#SBATCH --error=slurm_logs/%x.%A-%a.err
+#SBATCH --output=logs/%x.%A-%a.log
+#SBATCH --error=logs/%x.%A-%a.err
 #SBATCH --array=0-95%20
 
 ################################################################################
@@ -30,7 +29,7 @@
 #               --no-mixed (only pairs where both mates align), --mm (memory-mapped index)
 #
 # BEFORE SUBMITTING (run from 02_Cxt_Alignment):
-#   1. mkdir -p slurm_logs
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so this folder
 #         must exist ahead of time or the job fails with no log.)
 #   2. Build the file list. Task N processes line N+1 of this file:
@@ -68,7 +67,10 @@ module purge
 
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${SCRATCH}/miniconda3"; exit 1; }
-conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean || { echo "ERROR: conda activate rnaPseudo failed"; exit 1; }
+conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean || { echo "ERROR: conda activate rnaPseudo_clean failed"; exit 1; }
+
+# Stop on errors (after conda activation, which does not play well with set -e)
+set -eo pipefail
 
 date
 
