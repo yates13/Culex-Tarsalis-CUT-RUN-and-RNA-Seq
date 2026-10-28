@@ -10,8 +10,8 @@
 #SBATCH --job-name=MultiQC
 #SBATCH --mail-user=shawn.yates@colostate.edu
 #SBATCH --mail-type=all
-#SBATCH --output=slurm_logs/%x.%A.log
-#SBATCH --error=slurm_logs/%x.%A.err
+#SBATCH --output=logs/%x.%A.log
+#SBATCH --error=logs/%x.%A.err
 
 ################################################################################
 # STEP 2.2.5: Combined QC report for trimming and alignment (single job)
@@ -30,12 +30,12 @@
 # RESOURCES: 1 CPU, 16 GB, 1 h
 #
 # DIRECTORIES
-#   Run from 02_Cxt_Alignment. Job logs go to slurm_logs/ in the folder you
+#   Run from 02_Cxt_Alignment. Job logs go to logs/ in the folder you
 #   submit from. The MultiQC input and output folders are full paths in the
 #   multiqc command below.
 #
 # BEFORE SUBMITTING (run from 02_Cxt_Alignment)
-#   1. mkdir -p slurm_logs
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so this folder
 #         must exist ahead of time or the job fails with no log.)
 #   2. Confirm both input folders are complete:
@@ -50,7 +50,7 @@
 # HOW IT WORKS
 #   - -f overwrites any existing report in the output folder, so rerunning
 #     replaces the old report.
-#   - --ignore "*.err" and --ignore "slurm_logs/" keep job logs out of the scan.
+#   - --ignore "*.err" and --ignore "logs/" keep job logs out of the scan.
 #   - --title sets the report title and the report file name.
 #   - An optional MultiQC config file (multiqc_config.yaml) can be added with
 #     -c to control sample naming. It is commented out at the end of the command.
@@ -87,7 +87,7 @@ multiqc \
     /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/01_Cxt_FastP/01.1_Cxt_fastp_out \
     /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2_Cxt_HisatAligned_Cleaned \
     --ignore "*.err" \
-    --ignore "slurm_logs/" \
+    --ignore "logs/" \
     -o /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2.5_MultiQC_Hisat_aligned \
     -f \
     --title "Cxt CUT&RUN Pipeline QC - fastp + HISAT2"
