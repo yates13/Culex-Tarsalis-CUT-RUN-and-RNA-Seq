@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --partition=acpu
 #SBATCH --job-name=ZH_Targets_Individual_Bams_dynamic_naming
-#SBATCH --output=out_log/%x.%A-%a.log
-#SBATCH --error=err_log/%x.%A-%a.err
+#SBATCH --output=logs/%x.%j.log
+#SBATCH --error=logs/%x.%j.err
 #SBATCH --time=1:00:00
 #SBATCH --qos=cpu-normal
 #SBATCH --nodes=1
@@ -96,6 +96,7 @@
 
 
 set -e
+shopt -s nullglob
 
 # ----------------------------
 # Environment setup
@@ -112,7 +113,7 @@ BW_DIR="${DEEPTOOLS_DIR}/00_BigWig_Files_Individual_Bams"
 #MATRIX="${DEEPTOOLS_DIR}/bigwiglist_Individual_Bams_gene_only_bed_file.gz"
 MATRIX="${DEEPTOOLS_DIR}/matrix_combined_gene_only_bed_file.gz"
 OUTDIR="${DEEPTOOLS_DIR}/Figures"
-mkdir -p "$OUTDIR" out_log err_log
+mkdir -p "$OUTDIR"
 
 # ----------------------------
 # Plot settings
@@ -180,7 +181,7 @@ for TARGET in AC ME SR; do
             --samplesLabel "${ZH_SAMPLES[@]}" \
             --regionsLabel "" \
             -T "${TARGET} ${DAY} — ZH Only" \
-            -y "Reads per Genomic Content" \
+            -y "Input-subtracted signal (BPM)" \
             --yMin -0.3 \
             --yMax 0.8 \
             --plotHeight 8 \

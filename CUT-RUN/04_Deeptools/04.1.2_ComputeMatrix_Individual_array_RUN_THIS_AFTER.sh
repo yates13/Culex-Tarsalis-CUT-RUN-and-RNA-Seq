@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --qos=cpu-normal
 #SBATCH --job-name=computeMatrix_merge
-#SBATCH --output=out_log/%x.%A_%a.log
-#SBATCH --error=err_log/%x.%A_%a.err
+#SBATCH --output=logs/%x.%j.log
+#SBATCH --error=logs/%x.%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -27,11 +27,11 @@
 # DIRECTORIES
 #   Run from 04_Deeptools, the same folder used for Step 4.1. Input and output
 #   paths are relative to the folder you submit from.
-#   out_log/ err_log/  Job logs. Must exist before submitting.
+#   logs/  Job logs. Must exist before submitting.
 #
 # BEFORE SUBMITTING (run from 04_Deeptools)
-#   1. mkdir -p out_log err_log
-#        (SLURM opens the log files before the script starts, so these folders
+#   1. mkdir -p logs
+#        (SLURM opens the log files before the script starts, so this folder
 #         must exist ahead of time or the job fails with no log.)
 #   2. Confirm all four input matrices exist:
 #        ls matrix_BF.gz matrix_MP.gz matrix_SF.gz matrix_ZH.gz
@@ -63,7 +63,7 @@ set -e
 # ----------------------------
 # Environment setup
 # ----------------------------
-SCRATCH=/scratch/alpine/c832500103@colostate.edu
+SCRATCH=/scratch/alpine/.colostate.edu/c832500103
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
 

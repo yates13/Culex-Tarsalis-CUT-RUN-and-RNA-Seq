@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --qos=cpu-normal
 #SBATCH --job-name=computeMatrix_array
-#SBATCH --output=out_log/%x.%A_%a.log
-#SBATCH --error=err_log/%x.%A_%a.err
+#SBATCH --output=logs/%x.%A_%a.log
+#SBATCH --error=logs/%x.%A_%a.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -33,12 +33,12 @@
 #   Run from 04_Deeptools. The chunk files, matrices and region files all use
 #   paths relative to the folder you submit from.
 #   bw_chunks/       Input. Must contain one chunk_<GROUP>.txt per group.
-#   out_log/ err_log/ Job logs. Must exist before submitting.
+#   logs/            Job logs. Must exist before submitting.
 #   REFERENCE_BED    <path>/00_Cxt_Genome/Genome_gff/CtarK1_TSS.bed (outside the repo)
 #
 # BEFORE SUBMITTING (run from 04_Deeptools)
-#   1. mkdir -p out_log err_log
-#        (SLURM opens the log files before the script starts, so these folders
+#   1. mkdir -p logs
+#        (SLURM opens the log files before the script starts, so this folder
 #         must exist ahead of time or the job fails with no log.)
 #   2. Make sure bw_chunks/chunk_<GROUP>.txt exists for every group in POPS.
 #        ls bw_chunks/
@@ -83,7 +83,7 @@ set -e
 # ----------------------------
 # Environment setup
 # ----------------------------
-SCRATCH=/scratch/alpine/c832500103@colostate.edu
+SCRATCH=/scratch/alpine/.colostate.edu/c832500103
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
 
@@ -100,7 +100,7 @@ BIGWIGS=$(cat "$CHUNK")
 # ----------------------------
 # Reference regions
 # ----------------------------
-REFERENCE_BED="/scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS.bed"
+REFERENCE_BED="${SCRATCH}/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS.bed"
 
 # ----------------------------
 # Sample labels (bigWig name without _inputsubtracted.bw)
