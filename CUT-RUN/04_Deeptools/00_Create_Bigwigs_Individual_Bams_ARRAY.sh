@@ -58,8 +58,8 @@
 #   Put --array BEFORE the script name. Anything after the script name is passed
 #   to the script, not to sbatch, and is ignored.
 #   Other useful forms:
-#        sbatch --array=1-72%10 script.sh   # at most 10 tasks at once
-#        sbatch --array=5,17 script.sh      # rerun only tasks 5 and 17
+#        sbatch --array=1-72%10 00_Create_Bigwigs_Individual_Bams_ARRAY.sh   # at most 10 tasks at once
+#        sbatch --array=5,17 00_Create_Bigwigs_Individual_Bams_ARRAY.sh      # rerun only tasks 5 and 17
 #
 # HOW THE INPUT CONTROL IS CHOSEN (TEMPORARY)
 #   Each treatment BAM is compared against ANY Day 1 input BAM for the same
@@ -95,7 +95,7 @@ set -e
 # ----------------------------
 # Environment setup
 # ----------------------------
-SCRATCH=/scratch/alpine/c832500103@colostate.edu
+SCRATCH=/scratch/alpine/.colostate.edu/c832500103
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
 

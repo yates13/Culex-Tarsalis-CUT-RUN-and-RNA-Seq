@@ -72,6 +72,7 @@ conda activate ${SCRATCH}/conda_envs/macs2_env
 BAMDIR=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.4_Cxt_BamMerged_with_replicate_count
 PEAK_OUT=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/03_MACS2_Peaks_New_Peaks/03.1_MacsPeaks_with_replicate_count
 
+mkdir -p logs
 mkdir -p ${PEAK_OUT}
 
 # ----------------------------
