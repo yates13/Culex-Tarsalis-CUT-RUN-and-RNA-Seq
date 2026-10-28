@@ -14,6 +14,19 @@ This repository holds the analysis pipeline for a study of chromatin regulation 
 - **Timepoints:** Day 1 and Day 3
 - **Compute:** CU/CSU Alpine HPC, jobs run with SLURM
 
+### Sample names
+
+Samples are named `<TREATMENT>-<TARGET>-<DAY>-R<n>-Cxt`, for example `ZH-AC-D1-R1-Cxt`.
+
+| Field | Values |
+|-------|--------|
+| `TREATMENT` | BF, MP, SF, ZH |
+| `TARGET` | AC (H3K27ac), ME (H3K9me, broad domains), SR (SREBP), IN (input control) |
+| `DAY` | D1, D3 |
+| `R<n>` | replicate number, up to 5 |
+
+After replicates are merged (Step 2.4) the name becomes `<TREATMENT>-<TARGET>-<DAY>-rep<digits>`. The digits list which replicates went in: `rep123` = R1, R2 and R3.
+
 ## Pipeline
 
 Run the steps in order. Each folder has its own scripts, numbered in run order.
@@ -21,32 +34,42 @@ Run the steps in order. Each folder has its own scripts, numbered in run order.
 | Step | Folder | What it does | Status |
 |------|--------|--------------|--------|
 | 1 | [`CUT-RUN/01_Cxt_FastP`](CUT-RUN/01_Cxt_FastP) | Read trimming with fastp, sample renaming, MultiQC summary of the fastp reports | Scripts updated |
-| 2 | [`CUT-RUN/02_Cxt_Alignment`](CUT-RUN/02_Cxt_Alignment) | HISAT2 index and alignment, BAM conversion, replicate merging, MultiQC | In progress (02.1 and 02.2 updated) |
-| 3 | [`CUT-RUN/03_MACS2_Peaks_New_Peaks`](CUT-RUN/03_MACS2_Peaks_New_Peaks) | Peak calling with MACS2 | Not yet updated |
-| 4 | [`CUT-RUN/04_Deeptools`](CUT-RUN/04_Deeptools) | bigWigs, signal matrices, heatmaps and profiles with deepTools | Not yet updated |
+| 2 | [`CUT-RUN/02_Cxt_Alignment`](CUT-RUN/02_Cxt_Alignment) | HISAT2 index and alignment, alignment QC, BAM conversion, replicate merging | Scripts updated (`Gvis_Function` and `HOW_TO_MAKE_FASTQTRIMMED_FILE` still to do) |
+| 3 | [`CUT-RUN/03_MACS2_Peaks_New_Peaks`](CUT-RUN/03_MACS2_Peaks_New_Peaks) | Peak calling with MACS2 | `03.1` updated |
+| 4 | [`CUT-RUN/04_Deeptools`](CUT-RUN/04_Deeptools) | bigWigs, signal matrices, heatmaps and profiles with deepTools | `04.0`, `04.1`, `04.1.2` updated, the rest still to do |
 | 5 | [`CUT-RUN/05_HomerAnnotation`](CUT-RUN/05_HomerAnnotation) | Peak annotation with HOMER | Not yet updated |
 
 To view tracks in IGV, see [`IGV_ChIP-Seq_Instructions.pdf`](CUT-RUN/IGV_ChIP-Seq_Instructions.pdf).
 
 ## Setup
 
-Each step activates its own conda environment from `${SCRATCH}/conda_envs/`.
+### Conda environments
+
+Each step activates its own conda environment.
 
 | Environment | Used in |
 |-------------|---------|
-| `fastp_env` | Step 1, trimming |
-| `rnaPseudo_clean` | Step 1 (MultiQC) and Step 2 (HISAT2 index build and alignment) |
+| `fastp_env` | Step 1.1, trimming |
+| `rnaPseudo_clean` | Step 1.2 (MultiQC) and all of Step 2 (HISAT2, samtools, MultiQC) |
 | `macs2_env` | Step 3, peak calling |
 | `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` |
+| `homer_env` | Step 5, HOMER annotation |
 
-<!-- TODO: add the Step 5 environment (homer_env) and confirm the Step 2 scripts after 02.2 use rnaPseudo_clean; confirm .yml files exist in the repo -->
-If a `.yml` file exists for an environment (for example in `CondaEnvs/`), create it with:
+<!-- TODO: add .yml exports for rnaPseudo_clean and homer_env to CondaEnvs/, and update the conda lines in the scripts if the environments move -->
+The folder [`CondaEnvs`](CondaEnvs) holds one `.yml` file per environment. Build the ones that are missing with:
 
 ```bash
-conda env create --file YourCondaEnv.yml --prefix ${SCRATCH}/conda_envs/<env_name>
+bash CondaEnvs/make_envs.sh <ENV_DIR>
 ```
 
-Scripts load conda like this. Set `SCRATCH` to your own scratch path first:
+where `<ENV_DIR>` is the folder that will hold the environments (for example a `conda_envs` folder in `/projects`). Environments that already exist are skipped. To save an existing environment so it can be rebuilt later:
+
+```bash
+conda env export --from-history -p <ENV_DIR>/<name> | grep -v '^prefix:' > CondaEnvs/<name>.yml
+conda env export --no-builds    -p <ENV_DIR>/<name> | grep -v '^prefix:' > CondaEnvs/<name>.full.yml
+```
+
+Scripts load conda like this. Set `SCRATCH` to your own base path first:
 
 ```bash
 SCRATCH=/scratch/alpine/<your_username>
@@ -54,20 +77,38 @@ source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/<env_name>
 ```
 
+### Data retention (important)
+
+Files in `/scratch/alpine` are removed 90 days after they are created, and scratch is not backed up. Conda environments and pipeline outputs on scratch can disappear. To protect your work:
+
+- Keep scripts in this repository and environment files in `CondaEnvs/`.
+- Build conda environments (and Miniconda) in `/projects`, which is backed up, not in scratch.
+- Copy the results you cannot regenerate off scratch: peak calls, matrices, merged BAMs and bigWigs. Keep a second copy of the raw reads somewhere other than scratch.
+- Intermediate files (trimmed FASTQs, SAMs, individual BAMs) can be regenerated from the raw reads and these scripts.
+
 ## Running
 
-1. Edit the paths at the top of each script to match your directory (and the `--mail-user` address in the `#SBATCH` header).
-2. All scripts use `--partition=acpu` and `--qos=cpu-normal`, and write their Slurm logs to a `logs/` folder. Create it in the folder you submit from before submitting (`mkdir -p logs`). Slurm cannot create it, and a job whose log folder is missing fails without a log.
-3. Submit each step with `sbatch <script>.sh` and check outputs before moving on.
+1. Edit the paths at the top of each script to match your directory, and the `--mail-user` address in the `#SBATCH` header.
+2. All scripts use `--partition=acpu` and `--qos=cpu-normal`, and write their Slurm logs to a `logs/` folder. Slurm cannot create that folder, and a job whose log folder is missing fails without a log, so run `mkdir -p logs` first.
+3. Submit each script from the folder that contains it (see the table below), then check the outputs before moving on.
 4. See the `How_to_make_*` files in each folder for building sample and treatment lists.
+
+### Where to run each script
+
+With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`):
+
+| Scripts | Submit from |
+|---------|-------------|
+| `01.1_fastp_Cxt.sh`, `01.2_multiqc_fastp.sh` | `$P/01_Cxt_FastP` |
+| `02.2`, `02.2.5` (`MultiQC.sh`), `02.3`, `02.4` | `$P/02_Cxt_Alignment` |
+| `03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh` | `$P/03_MACS2_Peaks_New_Peaks` |
+| `04.0`, `04.1`, `04.1.2` | `$P/04_Deeptools` (it needs `bw_chunks/` and writes `matrix_*.gz` and `region_*.bed` there) |
 
 ## Step details
 
 ### Step 1: Trimming and QC (`CUT-RUN/01_Cxt_FastP`)
 
 <!-- TODO: explain "Round1_Round2_With_Duplicates" (the pipeline output folder name) if it should appear here -->
-Scripts, in run order:
-
 | Script | What it does | Environment |
 |--------|--------------|-------------|
 | `01.1_fastp_Cxt.sh` | Trims paired-end reads with fastp, one sample per SLURM array task. fastp also writes a QC report per sample. | `fastp_env` |
@@ -107,25 +148,25 @@ sbatch 01.2_multiqc_fastp.sh
 
 The MultiQC report is written to `01.2_FastP_MultiQC/MultiQC_out/`.
 
-### Step 2: Index and alignment (`CUT-RUN/02_Cxt_Alignment`)
+### Step 2: Index, alignment and BAMs (`CUT-RUN/02_Cxt_Alignment`)
 
-Scripts reviewed and updated so far:
-
+<!-- TODO: 02.1 uses a relative path (cd Cxt_Genome); switch it to absolute paths. Add Gvis_Function and HOW_TO_MAKE_FASTQTRIMMED_FILE. -->
 | Script | What it does | Environment |
 |--------|--------------|-------------|
-| `02.1_runBuildCtark1Genome_apline.sh` | Builds the HISAT2 index for CtarK1 from `Cxt_Genome/CtarK1.fa` and writes `CtarK1_index.*.ht2` to `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean` |
-| `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per SLURM array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `rnaPseudo_clean` |
+| `02.1_runBuildCtark1Genome_apline.sh` | Builds the HISAT2 index for CtarK1 and writes `CtarK1_index.*.ht2` to `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean` |
+| `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `rnaPseudo_clean` |
+| `MultiQC.sh` (Step 2.2.5) | One MultiQC report covering the fastp and HISAT2 outputs. | `rnaPseudo_clean` |
+| `02.3_runBam_array.sh` | Converts each SAM to a sorted, indexed BAM with samtools, one sample per array task. Safe to resubmit: finished samples are skipped. | `rnaPseudo_clean` |
+| `02.4_BamMerge_With_replicate_counts_array.sh` | Merges the replicate BAMs of each condition, one condition per array task. | `rnaPseudo_clean` |
 
-Still to be reviewed and documented: `02.2.5_MultiQC_Hisat_aligned`, `02.3_runBamm_array.sh`, `02.4_BamMerge_With_replicate_counts_array.sh`, `Gvis_Function`, `HOW_TO_MAKE_FASTQTRIMMED_FILE`.
-
-**1. Build the index (once).** Submit from the folder that contains `Cxt_Genome/`:
+**2.1 Build the index (once).** Skip this if the eight `CtarK1_index.*.ht2` files already exist in `00_Cxt_Indexed_Genome/`.
 
 ```bash
 mkdir -p logs
 sbatch 02.1_runBuildCtark1Genome_apline.sh
 ```
 
-**2. Align.** Submit from `02_Cxt_Alignment`. First list the R1 trimmed files. Note that array numbering here starts at 0, so the array is `0-(N-1)`:
+**2.2 Align.** Array numbering here starts at 0, so the array is `0-(N-1)`:
 
 ```bash
 mkdir -p logs
@@ -134,9 +175,7 @@ N=$(wc -l < FastqTrimmed.txt)
 sbatch --array=0-$((N-1))%20 02.2_Cxt_AlignArray_Hisat.sh
 ```
 
-HISAT2 runs with `--no-spliced-alignment` (CUT&RUN is genomic, not RNA), `--no-mixed` (only pairs where both mates align) and `--mm` (memory-mapped index).
-
-An array larger than the list makes the extra tasks quietly do nothing, so a successful job does not prove every sample ran. Check the results:
+HISAT2 runs with `--no-spliced-alignment` (CUT&RUN is genomic, not RNA), `--no-mixed` (only pairs where both mates align) and `--mm` (memory-mapped index). An array larger than the list makes the extra tasks quietly do nothing, so a successful job does not prove every sample ran. Check the results:
 
 ```bash
 ls <OUT_DIR>/*.sam | wc -l                       # should equal N
@@ -145,23 +184,114 @@ sacct -j <jobid> --format=JobID,State,ExitCode   # look for FAILED or TIMEOUT
 
 A task that hits the time limit leaves a truncated `.sam`. Rerun it with `sbatch --array=<task> 02.2_Cxt_AlignArray_Hisat.sh`.
 
+**2.2.5 Alignment QC.** Run after Step 1 and Step 2.2 have finished for every sample:
+
+```bash
+sbatch MultiQC.sh
+```
+
+It scans the fastp `.jsons  reports and the `.hisat2.log` files, and writes `Cxt-CUTRUN-Pipeline-QC-fastp--HISAT2_multiqc_report.html` to `02.2.5_MultiQC_Hisat_aligned/`. Open the General Statistics table: the number of rows should match your sample count.
+
+**2.3 Convert to BAM.** Once every `.sam` is confirmed good, build the list of SAM files (its line count is the array size, counting from 1):
+
+```bash
+mkdir -p logs
+samdir=<path_to_02.2_Cxt_HisatAligned_Cleaned>
+ls ${samdir}/*.sam > ${samdir}/sam_file_list.txt
+N=$(wc -l < ${samdir}/sam_file_list.txt)
+sbatch --array=1-${N} 02.3_runBam_array.sh
+```
+
+Check with `ls <outdir>/*.bam | wc -l` (should equal N) and `sacct`. A task fails if samtools hits a truncated SAM, so rerun Step 2.2 for that sample first. Once every BAM is confirmed good, the SAM files can be deleted to free scratch space.
+
+**2.4 Merge replicates.** The array size is the number of conditions, not samples. Build the conditions list, then submit with that size:
+
+```bash
+bamdir=<path>/02.3_Cxt_BamConverted
+mergedir=<path>/02.4_Cxt_BamMerged_with_replicate_count
+mkdir -p logs $mergedir
+ls ${bamdir}/*.bam | xargs -n1 basename | sed 's/-R[0-9]-Cxt\.bam//' | sort -u > ${mergedir}/conditions.txt
+sbatch --array=1-$(wc -l < ${mergedir}/conditions.txt) 02.4_BamMerge_With_replicate_counts_array.sh
+```
+
+BAM names must follow `<condition>-R<n>-Cxt.bam`. Outputs per condition: `<condition>-rep<digits>-merged-sorted.bam` and its `.bai`. The unsorted `-merged.bam` intermediates can be deleted.
+
+### Step 3: Peak calling (`CUT-RUN/03_MACS2_Peaks_New_Peaks`)
+
+`03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh` calls peaks with MACS2 on every `*-merged-sorted.bam` from Step 2.4. It is a single job that loops over the samples, not an array. Environment: `macs2_env`.
+
+```bash
+mkdir -p logs
+sbatch 03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh
+```
+
+- Input controls (names containing `-IN-`) are skipped as samples.
+- ME (H3K9me) samples are called with `--broad`. AC and SR samples use MACS2's default narrow peak calling.
+- BAMs are treated as paired-end (`-f BAMPE`), duplicates are kept (`--keep-dup all`), and the effective genome size is 800,000,000.
+- Each sample is compared against the first `<TREATMENT>-IN-D1*-merged-sorted.bam`. All days (D1 and D3) therefore use a Day 1 input control.
+- Output goes to `03.1_MacsPeaks_with_replicate_count/<sample>/`, with the MACS2 messages for all samples appended to `macs2.log`. Rerunning redoes every sample and overwrites its outputs.
+- Samples with no input control, or no `rep<digits>` in the name, are reported and skipped. The job stops if MACS2 itself fails.
+
+### Step 4: deepTools (`CUT-RUN/04_Deeptools`)
+
+Environment for all Step 4 scripts: `deeptools_kernel_v2`. Submit from `04_Deeptools`.
+
+**4.0 Input-subtracted bigWigs** (`00_Create_Bigwigs_Individual_Bams_ARRAY.sh`). One BAM per array task; each treatment BAM from Step 2.3 is compared with a Day 1 input BAM of the same treatment using `bamCompare` (subtract, BPMnnormalized):
+
+```bash
+mkdir -p logs
+ls <BAM_INPUT_DIR>/*-Cxt.bam | grep -v -- '-IN-' > treatment_bam_list.txt
+sbatch --array=1-$(wc -l < treatment_bam_list.txt) 00_Create_Bigwigs_Individual_Bams_ARRAY.sh
+```
+
+Output: `<sample>_inputsubtracted.bw` in `00_BigWig_Files_Individual_Bams/`. Finished samples are skipped on resubmission.
+
+**4.1 Signal matrices** (`04.1_ComputeMatrix_Individual_array.sh`). One group (BF, MP, SF, ZH) per array task, TSS -2 kb to +2 kb. It reads the bigWigs listed in `bw_chunks/chunk_<GROUP>.txt` and the `CtarK1_TSS.bed` regions, and writes `matrix_<GROUP>.gz` and `region_<GROUP>.bed`:
+
+```bash
+ls bw_chunks/
+sbatch 04.1_ComputeMatrix_Individual_array.sh
+```
+
+**4.1.2 Combine the groups** (`04.1.2_ComputeMatrix_Individual_array_RUN_THIS_AFTER.sh`). Run after 4.1 has finished for every group. It uses `computeMatrixOperations cbind` to put the samples of all four groups side by side:
+
+```bash
+sbatch 04.1.2_ComputeMatrix_Individual_array_RUN_THIS_AFTER.sh
+computeMatrixOperations info -m matrix_combined_gene_only_bed_file.gz
+```
+
+`cbind` matches regions by name against the first matrix. Regions missing from a later matrix become NA, and regions foundonly in a later matrix are dropped, without any message. Every group matrix should therefore be built from the same set of regions, so do not use `--skipZeros` in 4.1. Compare `wc -l region_*.bed` across the four groups to check.
+
+<!-- TODO: document the remaining Step 4 scripts (heatmaps, profiles) once they are reviewed -->
+
+### Step 5: HOMER annotation (`CUT-RUN/05_HomerAnnotation`)
+
+<!-- TODO: scripts not yet reviewed -->
+Not yet documented.
+
+## Known issues and notes
+
+- **Input pairing is temporary.** Steps 3 and 4.0 use a Day 1 input control for every sample, including Day 3, because not every treatment replicate has a same-numbered input yet. Switch to replicate-matched inputs once all input replicates exist.
+- **Timed-out alignments.** A HISAT2 task that reaches its time limit leaves a truncated `.sam`; rerun that task before converting to BAM.
+- **Email address.** Every script has a `--mail-user` line. Change it to your own.
+
 ## How to use Slurm
 
 Common commands: sbatch, srun, scancel, sacct, squeue, sinfo
 
-### Common Slurm commands
-
 ```bash
-sbatch [options] script [args]                   # submit a job, e.g. sbatch 04_deeptools.sh path/to/bams/folder
+sbatch [options] script [args]                   # submit a job
 scancel 12345                                    # cancel job 12345
 scancel {31415..31425}                           # cancel a range of sequential job IDs
 squeue | grep <your_username>                    # just your jobs
 sacct -j <jobid> --format=JobID,State,ExitCode   # how a job finished
 ```
 
+Put `--array` before the script name (`sbatch --array=1-96 script.sh`). Anything after the script name is passed to the script, not to sbatch.
+
 ### Writing a Slurm job script
 
-Create the file with `nano YourNewJob.sh`. Start it with this header (don't put any code above it):
+Start the file with this header (don't put any code above it):
 
 ```bash
 #!/bin/bash
@@ -176,13 +306,13 @@ Create the file with `nano YourNewJob.sh`. Start it with this header (don't put 
 
 Run `mkdir -p logs` before submitting.
 
-<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf; add the assembly citation; check the "apline" spelling in the 02.1 script name -->
+<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf; add the assembly citation; rename 02.1_runBuildCtark1Genome_apline.sh ("apline" typo) -->
 ## Reference genome
 
 - **Assembly:** *Culex tarsalis* CtarK1 [add source/citation]
 - **Annotation:** `Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3`
 - **Derived files:** `genes_only.gff3`, `CtarK1_TSS.bed`, and `Culex-tarsalis_knwr_CtarK1.bed`, built with the steps in `Bed_file_instructions.txt` and `Gene_only_bed_instructions.txt`
-- The HISAT2 index is built in Step 2 (`02.1_runBuildCtark1Genome_apline.sh`) and written to `00_Cxt_Indexed_Genome/`
+- The HISAT2 index is built in Step 2.1 and written to `00_Cxt_Indexed_Genome/`
 
 ## Data
 
@@ -190,13 +320,21 @@ Raw sequencing reads are not included in this repository.
 
 ## Notes
 
-- Large outputs (BAMs, bigWigs, matrices, logs) are not tracked in this repo.
+- Large outputs (BAMs, bigWigs, matrices) and the `logs/` folders are not tracked in this repo.
 - Contact: [Shawn / shawn.yates@colostate.edu]
 
 ## TODO
 
 - [ ] Finish updating the scripts through Step 4
-  - [ ] Step 2: `02.2.5_MultiQC_Hisat_aligned`, `02.3_runBamm_array.sh`, `02.4_BamMerge_With_replicate_counts_array.sh`, `Gvis_Function`, `HOW_TO_MAKE_FASTQTRIMMED_FILE`
-  - [ ] Step 3: MACS2 peak calling scripts
-  - [ ] Step 4: deepTools scripts
+  - [ ] Step 2: `Gvis_Function`, `HOW_TO_MAKE_FASTQTRIMMED_FILE`
+  - [ ] Step 3: any other MACS2 scripts
+  - [ ] Step 4: the remaining deepTools scripts (heatmaps and profiles)
 - [ ] Add the R scripts to the repo and document how to run them
+- [ ] Update and document Step 5 (HOMER)
+- [ ] Rebuild the lost conda environments (`fastp_env`, `macs2_env`, `deeptools_kernel_v2`) in `/projects`, export `.yml` files for all environments, and update the conda lines in the scripts
+- [ ] Confirm which environment the Step 2 scripts use (`rnaPseudo_clean`)
+- [ ] Back up pipeline results and raw reads off scratch
+- [ ] Switch Steps 3 and 4.0 to replicate-matched input controls when all input replicates exist
+- [ ] Fix the relative `Cxt_Genome` path in `02.1`, and rename the "apline" file
+- [ ] Use one `--mail-user` address across all scripts
+- [ ] Fix the Study overview (H3K9me vs H3K9me3, what BF and SF are) and add the genome citation
