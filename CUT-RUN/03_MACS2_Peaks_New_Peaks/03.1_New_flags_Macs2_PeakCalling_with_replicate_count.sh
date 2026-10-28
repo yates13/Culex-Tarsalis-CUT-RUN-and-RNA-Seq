@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --partition=acpu
 #SBATCH --job-name=MACS2_NewFlags_with_replicate_counts
-#SBATCH --output=%x.%j.out
-#SBATCH --error=%x.%j.err
+#SBATCH --output=logs/%x.%j.out
+#SBATCH --error=logs/%x.%j.err
 #SBATCH --time=24:00:00
 #SBATCH --qos=cpu-normal
 #SBATCH --nodes=1
@@ -52,11 +52,11 @@
 #   ERROR lines for anything not run. macs2.log has full MACS2 messages.
 #
 # NOTES
-#   - Job logs (%x.%j.out/.err) land in the folder you submit from.
+#   - Job logs go to logs/ in the folder you submit from. Run "mkdir -p logs" before sbatch.
 #   - Paths to check before running: SCRATCH, BAMDIR, PEAK_OUT, and the email above.
 ################################################################################
 
-set -e
+set -eo pipefail
 
 # ----------------------------
 # Environment setup
@@ -71,6 +71,7 @@ conda activate ${SCRATCH}/conda_envs/macs2_env
 # ----------------------------
 BAMDIR=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.4_Cxt_BamMerged_with_replicate_count
 PEAK_OUT=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/03_MACS2_Peaks_New_Peaks/03.1_MacsPeaks_with_replicate_count
+
 mkdir -p ${PEAK_OUT}
 
 # ----------------------------
@@ -104,7 +105,7 @@ for BAM in ${BAMDIR}/*-merged-sorted.bam; do
     TREATMENT=$(echo $SAMPLE | cut -d'-' -f1)
 
     # Extract replicate count (rep123, rep23, rep1, etc.)
-    REPS=$(echo "$SAMPLE" | grep -o 'rep[0-9]\+')
+    REPS=$(echo "$SAMPLE" | grep -o 'rep[0-9]\+' || true)
 
     if [[ -z "$REPS" ]]; then
         echo "[$count/$total] ERROR: No replicate count found in $SAMPLE"
@@ -112,7 +113,7 @@ for BAM in ${BAMDIR}/*-merged-sorted.bam; do
     fi
 
     # Find matching input control
-    INPUT_BAM=$(ls ${BAMDIR}/${TREATMENT}-IN-D1*-merged-sorted.bam 2>/dev/null | head -1)
+    INPUT_BAM=$(ls ${BAMDIR}/${TREATMENT}-IN-D1*-merged-sorted.bam 2>/dev/null | head -1 || true)
 
     if [[ -z "$INPUT_BAM" ]]; then
         echo "[$count/$total] SKIP: $SAMPLE (no input control for $TREATMENT)"
