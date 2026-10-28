@@ -42,7 +42,7 @@
 #   plot title. The palette (COLOR_PALETTE) is the only per-group setting.
 #
 # DIRECTORIES
-#   Run from 04_Deeptools. Job logs go to out_log/ and err_log/ in the folder
+#   Run from 04_Deeptools. Job logs go to logs/ in the folder
 #   you submit from. Everything else uses full paths.
 #   DEEPTOOLS_DIR = <path>/04_Deeptools
 #   BW_DIR        = DEEPTOOLS_DIR/00_BigWig_Files_Individual_Bams
@@ -50,7 +50,7 @@
 #   OUTDIR        = DEEPTOOLS_DIR/Figures (created automatically)
 #
 # BEFORE SUBMITTING (run from 04_Deeptools)
-#   1. mkdir -p out_log err_log
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so these folders
 #         must exist ahead of time or the job fails with no log.)
 #   2. Confirm Step 4.1.2 finished:
@@ -82,8 +82,8 @@
 #
 # CHECKING THE RESULTS
 #   ls <OUTDIR>/*_SF_profile.png     # 6 plots
-#   grep "SF samples:" out_log/*.log # which samples went into each plot
-#   grep "skipping" out_log/*.log    # plots that were left out
+#   grep "SF samples:" logs/*.log # which samples went into each plot
+#   grep "skipping" logs/*.log    # plots that were left out
 #
 # NOTES
 #   - The script stops on any error (set -e), for example if a sample name is
