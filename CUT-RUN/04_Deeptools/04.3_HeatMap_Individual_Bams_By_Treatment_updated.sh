@@ -2,8 +2,8 @@
 
 #SBATCH --partition=acpu
 #SBATCH --job-name=plotHeatMap_By_Target_Day
-#SBATCH --output=out_log/%x.%A-%a.log
-#SBATCH --error=err_log/%x.%A-%a.err
+#SBATCH --output=logs/%x.%j.log
+#SBATCH --error=logs/%x.%j.err
 #SBATCH --time=4:00:00
 #SBATCH --qos=cpu-normal
 #SBATCH --nodes=1
@@ -19,7 +19,7 @@
 # RUN THIS AFTER Step 4.1.2 has made matrix_combined_gene_only_bed_file.gz.
 #
 # USAGE (a title is required):
-#   sbatch 04.3_HeatMap_By_Target_Day.sh "Base Title"
+#   sbatch 04.3_HeatMap_Individual_Bams_By_Treatment_updated.sh "Base Title"
 #   Each heatmap is titled "<Base Title> - <TARGET> <DAY>".
 #   The script exits immediately with an error if no title is given.
 #
@@ -41,19 +41,19 @@
 #   per group.
 #
 # DIRECTORIES
-#   Run from 04_Deeptools. Job logs go to out_log/ and err_log/ in the folder
+#   Run from 04_Deeptools. Job logs go to logs/ in the folder
 #   you submit from. Everything else uses full paths.
 #   DEEPTOOLS_DIR = <path>/04_Deeptools
 #   MATRIX        = DEEPTOOLS_DIR/matrix_combined_gene_only_bed_file.gz
 #   OUTDIR        = DEEPTOOLS_DIR/Figures (created automatically)
 #
 # BEFORE SUBMITTING (run from 04_Deeptools)
-#   1. mkdir -p out_log err_log
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so these folders
 #         must exist ahead of time or the job fails with no log.)
 #   2. Confirm Step 4.1.2 finished:
 #        ls -lh <DEEPTOOLS_DIR>/matrix_combined_gene_only_bed_file.gz
-#   3. sbatch 04.3_HeatMap_By_Target_Day.sh "Your Base Title"
+#   3. sbatch 04.3_HeatMap_Individual_Bams_By_Treatment_updated.sh "Your Base Title"
 #
 # NOT AN ARRAY JOB
 #   There is no array size to change. One job loops over the target/day pairs
@@ -73,8 +73,8 @@
 #
 # CHECKING THE RESULTS
 #   ls <OUTDIR>/*_all_pops_heatmap.png     # 6 heatmaps
-#   grep "samples:" out_log/*.log          # which samples went into each plot
-#   grep "skipping" out_log/*.log          # pairs that were left out
+#   grep "samples:" logs/*.log          # which samples went into each plot
+#   grep "skipping" logs/*.log          # pairs that were left out
 #   The log ends with a list of the output files and their sizes.
 #
 # NOTES
@@ -87,7 +87,7 @@ set -e
 # ----------------------------
 # Environment setup
 # ----------------------------
-SCRATCH=/scratch/alpine/c832500103@colostate.edu
+SCRATCH=/scratch/alpine/.colostate.edu/c832500103
 source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
 
@@ -97,7 +97,7 @@ conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
 DEEPTOOLS_DIR="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/04_Deeptools"
 MATRIX="${DEEPTOOLS_DIR}/matrix_combined_gene_only_bed_file.gz"
 OUTDIR="${DEEPTOOLS_DIR}/Figures"
-mkdir -p "$OUTDIR" out_log err_log
+mkdir -p "$OUTDIR"
 
 # ----------------------------
 # Target x Day pairs to process
@@ -131,7 +131,7 @@ fi
 
 if [[ $# -lt 1 ]]; then
     echo "ERROR: Missing title argument"
-    echo "USAGE: sbatch 04.3_HeatMap_By_Target_Day.sh 'Base Title'"
+    echo "USAGE: sbatch 04.3_HeatMap_Individual_Bams_By_Treatment_updated.sh 'Base Title'"
     exit 1
 fi
 BASE_TITLE=$1
