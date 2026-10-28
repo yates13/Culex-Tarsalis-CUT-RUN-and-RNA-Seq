@@ -9,8 +9,8 @@
 #SBATCH --job-name=BamMerge_with_replicate_count
 #SBATCH --mail-user=shawn.yates@colostate.edu
 #SBATCH --mail-type=ALL
-#SBATCH --output=%x.%A_%a.log
-#SBATCH --error=%x.%A_%a.err
+#SBATCH --output=logs/%x.%A_%a.log
+#SBATCH --error=logs/%x.%A_%a.err
 #SBATCH --array=1-32		 # MUST equal the number of CONDITIONS in conditions.txt (not samples)
 
 ################################################################################
@@ -52,8 +52,8 @@
 #       "no condition found for array index N".
 #   Using the wc -l form above avoids editing the "#SBATCH --array" line.
 #   Other useful forms:
-#        sbatch --array=1-32%10 script.sh   # at most 10 tasks at once
-#        sbatch --array=5,17 script.sh      # rerun only tasks 5 and 17
+#        sbatch --array=1-32%10 02.4_BamMerge_With_replicate_counts_array.sh   # at most 10 tasks at once
+#        sbatch --array=5,17 02.4_BamMerge_With_replicate_counts_array.sh      # rerun only tasks 5 and 17
 #
 # CHECKING THE RESULTS
 #   ls <mergedir>/*-merged-sorted.bam | wc -l    # should equal the number of conditions
@@ -68,8 +68,6 @@
 #   - The script stops on any error (set -euo pipefail).
 ################################################################################
 
-set -euo pipefail
-
 # -----------------------------
 # Load environment
 # -----------------------------
@@ -79,6 +77,8 @@ source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
 conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean
 date
 nthreads=$SLURM_CPUS_PER_TASK
+
+set -euo pipefail
 
 # -----------------------------
 # Define directories
