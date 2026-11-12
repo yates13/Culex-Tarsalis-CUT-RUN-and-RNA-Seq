@@ -32,7 +32,7 @@
 #   For one target and day, the representative replicate of each group
 #   (BF, MP, ZH, SF) is plotted on one graph, one colored line per group,
 #   all on the same fixed y-axis so plots can be compared directly.
-#   TARGET: AC = H3K27ac, ME = H3K9me, SR = SREBP.
+#   TARGET: AC = H3K27ac, ME = H3K9me3, SR = SREBP.
 #
 # DIRECTORIES
 #   Run from 04_Deeptools/04.2_Representative_Replicates. Job logs go to out_log/

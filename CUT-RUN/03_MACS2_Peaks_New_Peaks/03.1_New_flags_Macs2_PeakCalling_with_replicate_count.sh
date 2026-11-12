@@ -19,7 +19,7 @@
 #            (02.4_Cxt_BamMerged_with_replicate_count)
 #          Names must look like <TREATMENT>-<TARGET>-<DAY>-rep<digits>-merged-sorted.bam
 #            TREATMENT = field 1 (e.g. ZH, MP)
-#            TARGET    = field 2 (AC = H3K27ac, ME = H3K9me, SR = SREBP, IN = input)
+#            TARGET    = field 2 (AC = H3K27ac, ME = H3K9me3, SR = SREBP, IN = input)
 # OUTPUT:  in 03.1_MacsPeaks_with_replicate_count/<sample>/ : MACS2 peak files
 #          macs2.log (all samples, appended) in 03.1_MacsPeaks_with_replicate_count/
 # ENV:     macs2_env
@@ -27,7 +27,7 @@
 #
 # HOW IT WORKS
 #   - Input controls (names containing "-IN-") are skipped as samples.
-#   - ME samples (H3K9me, broad domains) are called with --broad.
+#   - ME samples (H3K9me3, broad domains) are called with --broad.
 #     AC and SR samples use MACS2's default narrow peak calling.
 #   - Each sample is compared against the input control matching its TREATMENT:
 #       <TREATMENT>-IN-D1*-merged-sorted.bam  (first match is used)

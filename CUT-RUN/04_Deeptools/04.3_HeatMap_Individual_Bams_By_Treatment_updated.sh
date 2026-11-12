@@ -36,7 +36,7 @@
 # WHAT EACH HEATMAP SHOWS
 #   For one target and day, EVERY replicate of every group (BF, MP, SF, ZH)
 #   appears as its own panel around the TSS, in the order the samples appear in
-#   the combined matrix. TARGET: AC = H3K27ac, ME = H3K9me, SR = SREBP.
+#   the combined matrix. TARGET: AC = H3K27ac, ME = H3K9me3, SR = SREBP.
 #   Compare with 04.3_Heat_Maps.sh, which shows one representative replicate
 #   per group.
 #

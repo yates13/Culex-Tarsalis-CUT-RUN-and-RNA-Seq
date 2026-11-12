@@ -36,7 +36,7 @@
 # WHAT EACH HEATMAP SHOWS
 #   For one target and day, the representative replicate of each group
 #   (SF, BF, MP, ZH) is shown as its own side-by-side panel around the TSS,
-#   in that order. TARGET: AC = H3K27ac, ME = H3K9me, SR = SREBP.
+#   in that order. TARGET: AC = H3K27ac, ME = H3K9me3, SR = SREBP.
 #
 # DIRECTORIES
 #   Run from 04_Deeptools/04.3_Representative_Replicates_heat_maps. Job logs go

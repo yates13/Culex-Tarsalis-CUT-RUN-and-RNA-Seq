@@ -2,13 +2,13 @@
 
 This repository holds the analysis pipeline for a study of chromatin regulation in *Culex tarsalis* during infection with Rift Valley Fever Virus (RVFV). We used **CUT&RUN** and **RNA-seq** data to compare infection with two RVFV strains, **ZH501** and **MP12**.
 
-<!-- TODO (Study overview): confirm H3K9me vs H3K9me3, explain the BF and SF sites, confirm strain/site wording -->
+<!-- TODO (Study overview): confirm strain/site wording -->
 ## Study overview
 
 - **Virus strains:** RVFV ZH501 and MP12
 - **CUT&RUN targets:**
   - H3K27ac (active regulatory regions)
-  - H3K9me (repressive chromatin)
+  - H3K9me3 (repressive chromatin)
   - SREBP (transcription factor)
 - **Additional data:** RNA-seq, for comparing chromatin changes with gene expression
 - **Timepoints:** Day 1 and Day 3
@@ -21,7 +21,7 @@ Samples are named `<TREATMENT>-<TARGET>-<DAY>-R<n>-Cxt`, for example `ZH-AC-D1-R
 | Field | Values |
 |-------|--------|
 | `TREATMENT` | BF (Blood fed), MP (MP12), SF (Sugar Fed), ZH (ZH501) |
-| `TARGET` | AC (H3K27ac), ME (H3K9me, broad domains), SR (SREBP), IN (input control) |
+| `TARGET` | AC (H3K27ac), ME (H3K9me3, broad domains), SR (SREBP), IN (input control) |
 | `DAY` | D1, D3 |
 | `R<n>` | replicate number, up to 5 |
 
@@ -226,7 +226,7 @@ sbatch 03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh
 ```
 
 - Input controls (names containing `-IN-`) are skipped as samples.
-- ME (H3K9me) samples are called with `--broad`. AC and SR samples use MACS2's default narrow peak calling.
+- ME (H3K9me3) samples are called with `--broad`. AC and SR samples use MACS2's default narrow peak calling.
 - BAMs are treated as paired-end (`-f BAMPE`), duplicates are kept (`--keep-dup all`), and the effective genome size is 800,000,000.
 - Each sample is compared against the first `<TREATMENT>-IN-D1*-merged-sorted.bam`. All days (D1 and D3) therefore use a Day 1 input control.
 - Output goes to `03.1_MacsPeaks_with_replicate_count/<sample>/`, with the MACS2 messages for all samples appended to `macs2.log`. Rerunning redoes every sample and overwrites its outputs.
@@ -324,10 +324,10 @@ Start the file with this header (don't put any code above it):
 
 Run `mkdir -p logs` before submitting.
 
-<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf; add the assembly citation -->
+<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf -->
 ## Reference genome
 
-- **Assembly:** *Culex tarsalis* CtarK1 [add source/citation]
+- **Assembly:** *Culex tarsalis* CtarK1 (Kern National Wildlife Refuge colony), Main et al. 2021, [Whole-genome assembly of *Culex tarsalis*](https://doi.org/10.1093/g3journal/jkaa063), G3 11(2):jkaa063. Genome and annotation files: <https://osf.io/mdwqx/>
 - **Annotation:** `Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3`
 - **Derived files:** `genes_only.gff3`, `CtarK1_TSS.bed`, and `Culex-tarsalis_knwr_CtarK1.bed`, built with the steps in `Bed_file_instructions.txt` and `Gene_only_bed_instructions.txt`
 - The HISAT2 index is built in Step 2.1 and written to `00_Cxt_Indexed_Genome/`
@@ -354,5 +354,4 @@ Raw sequencing reads are not included in this repository.
 - [x] Back up pipeline results and raw reads off scratch
 - [ ] Switch Steps 3 and 4.0 to replicate-matched input controls when all input replicates exist
 - [ ] Fix the relative `Cxt_Genome` path in `02.1`
-- [ ] Use one `--mail-user` address across all scripts
-- [ ] Fix the Study overview (H3K9me vs H3K9me3, what BF and SF are) and add the genome citation
+- [x] Use one `--mail-user` address across all scripts

@@ -31,7 +31,7 @@
 #
 # WHAT EACH PLOT SHOWS
 #   For one target and day, every SF replicate is drawn as its own colored line
-#   around the TSS (-2 kb to +2 kb). TARGET: AC = H3K27ac, ME = H3K9me,
+#   around the TSS (-2 kb to +2 kb). TARGET: AC = H3K27ac, ME = H3K9me3,
 #   SREBP = SR. The y-axis is fixed (-0.3 to 0.8) so plots can be compared.
 #
 # ONE OF FOUR SIBLING SCRIPTS
