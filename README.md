@@ -50,12 +50,12 @@ Each step activates its own conda environment.
 | Environment | Used in |
 |-------------|---------|
 | `fastp_env` | Step 1.1, trimming |
-| `rnaPseudo_clean` | Step 1.2 (MultiQC) and all of Step 2 (HISAT2, samtools, MultiQC) |
+| `rnaPseudo_clean2` | Step 1.2 (MultiQC) and all of Step 2 (HISAT2, samtools, MultiQC) |
 | `macs2_env` | Step 3, peak calling |
 | `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` |
 | `homer_env` | Step 5, HOMER annotation |
 
-<!-- TODO: add .yml exports for rnaPseudo_clean and homer_env to CondaEnvs/, and update the conda lines in the scripts if the environments move -->
+<!-- TODO: add .yml exports for rnaPseudo_clean2 and homer_env to CondaEnvs/, and update the conda lines in the scripts if the environments move -->
 The folder [`CondaEnvs`](CondaEnvs) holds one `.yml` file per environment. Build the ones that are missing with:
 
 ```bash
@@ -69,12 +69,12 @@ conda env export --from-history -p <ENV_DIR>/<name> | grep -v '^prefix:' > Conda
 conda env export --no-builds    -p <ENV_DIR>/<name> | grep -v '^prefix:' > CondaEnvs/<name>.full.yml
 ```
 
-Scripts load conda like this. Set `SCRATCH` to your own base path first:
+Scripts load conda like this. Set `PROJ` to your own `/projects` folder first:
 
 ```bash
-SCRATCH=/scratch/alpine/<your_username>
-source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
-conda activate ${SCRATCH}/conda_envs/<env_name>
+PROJ=/projects/<your_username>
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh
+conda activate ${PROJ}/conda_envs/<env_name>
 ```
 
 ### Data retention (important)
@@ -113,7 +113,7 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 |--------|--------------|-------------|
 | `01.1_fastp_Cxt.sh` | Trims paired-end reads with fastp, one sample per SLURM array task. fastp also writes a QC report per sample. | `fastp_env` |
 | `01.1_fix_sample_names.sh` | Renames `*_Cxt_R{1,2}_trimmed.fastq.gz` to `*-Cxt_R{1,2}_trimmed.fastq.gz` so sample names are consistent. | none |
-| `01.2_multiqc_fastp.sh` | Combines the per-sample fastp reports into one MultiQC report. | `rnaPseudo_clean` |
+| `01.2_multiqc_fastp.sh` | Combines the per-sample fastp reports into one MultiQC report. | `rnaPseudo_clean2` |
 
 **1. Trim reads.** Build the R1 list in the raw FASTQ folder. Its line count is the array size:
 
@@ -153,17 +153,17 @@ The MultiQC report is written to `01.2_FastP_MultiQC/MultiQC_out/`.
 <!-- TODO: 02.1 uses a relative path (cd Cxt_Genome); switch it to absolute paths. Add Gvis_Function and HOW_TO_MAKE_FASTQTRIMMED_FILE. -->
 | Script | What it does | Environment |
 |--------|--------------|-------------|
-| `02.1_runBuildCtark1Genome_apline.sh` | Builds the HISAT2 index for CtarK1 and writes `CtarK1_index.*.ht2` to `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean` |
-| `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `rnaPseudo_clean` |
-| `MultiQC.sh` (Step 2.2.5) | One MultiQC report covering the fastp and HISAT2 outputs. | `rnaPseudo_clean` |
-| `02.3_runBam_array.sh` | Converts each SAM to a sorted, indexed BAM with samtools, one sample per array task. Safe to resubmit: finished samples are skipped. | `rnaPseudo_clean` |
-| `02.4_BamMerge_With_replicate_counts_array.sh` | Merges the replicate BAMs of each condition, one condition per array task. | `rnaPseudo_clean` |
+| `02.1_runBuildCtark1Genome_alpine.sh` | Builds the HISAT2 index for CtarK1 and writes `CtarK1_index.*.ht2` to `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean2` |
+| `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `rnaPseudo_clean2` |
+| `MultiQC.sh` (Step 2.2.5) | One MultiQC report covering the fastp and HISAT2 outputs. | `rnaPseudo_clean2` |
+| `02.3_runBam_array.sh` | Converts each SAM to a sorted, indexed BAM with samtools, one sample per array task. Safe to resubmit: finished samples are skipped. | `rnaPseudo_clean2` |
+| `02.4_BamMerge_With_replicate_counts_array.sh` | Merges the replicate BAMs of each condition, one condition per array task. | `rnaPseudo_clean2` |
 
 **2.1 Build the index (once).** Skip this if the eight `CtarK1_index.*.ht2` files already exist in `00_Cxt_Indexed_Genome/`.
 
 ```bash
 mkdir -p logs
-sbatch 02.1_runBuildCtark1Genome_apline.sh
+sbatch 02.1_runBuildCtark1Genome_alpine.sh
 ```
 
 **2.2 Align.** Array numbering here starts at 0, so the array is `0-(N-1)`:
@@ -324,7 +324,7 @@ Start the file with this header (don't put any code above it):
 
 Run `mkdir -p logs` before submitting.
 
-<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf; add the assembly citation; rename 02.1_runBuildCtark1Genome_apline.sh ("apline" typo) -->
+<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf; add the assembly citation -->
 ## Reference genome
 
 - **Assembly:** *Culex tarsalis* CtarK1 [add source/citation]
@@ -350,9 +350,9 @@ Raw sequencing reads are not included in this repository.
 - [ ] Add the R scripts to the repo and document how to run them
 - [ ] Update and document Step 5 (HOMER)
 - [ ] Rebuild the lost conda environments (`fastp_env`, `macs2_env`, `deeptools_kernel_v2`) in `/projects`, export `.yml` files for all environments, and update the conda lines in the scripts
-- [ ] Confirm which environment the Step 2 scripts use (`rnaPseudo_clean`)
-- [ ] Back up pipeline results and raw reads off scratch
+- [x] Confirm which environment the Step 2 scripts use (`rnaPseudo_clean2`)
+- [x] Back up pipeline results and raw reads off scratch
 - [ ] Switch Steps 3 and 4.0 to replicate-matched input controls when all input replicates exist
-- [ ] Fix the relative `Cxt_Genome` path in `02.1`, and rename the "apline" file
+- [ ] Fix the relative `Cxt_Genome` path in `02.1`
 - [ ] Use one `--mail-user` address across all scripts
 - [ ] Fix the Study overview (H3K9me vs H3K9me3, what BF and SF are) and add the genome citation
