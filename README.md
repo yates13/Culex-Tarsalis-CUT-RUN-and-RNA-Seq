@@ -20,7 +20,7 @@ Samples are named `<TREATMENT>-<TARGET>-<DAY>-R<n>-Cxt`, for example `ZH-AC-D1-R
 
 | Field | Values |
 |-------|--------|
-| `TREATMENT` | BF, MP, SF, ZH |
+| `TREATMENT` | BF (Blood fed), MP (MP12), SF (Sugar Fed), ZH (ZH501) |
 | `TARGET` | AC (H3K27ac), ME (H3K9me, broad domains), SR (SREBP), IN (input control) |
 | `DAY` | D1, D3 |
 | `R<n>` | replicate number, up to 5 |
