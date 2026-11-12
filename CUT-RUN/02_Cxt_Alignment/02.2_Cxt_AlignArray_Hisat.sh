@@ -22,8 +22,8 @@
 # OUTPUT:  in 02.2_Cxt_HisatAligned_Cleaned, per sample:
 #            <sample>.sam            (alignments)
 #            <sample>.hisat2.log     (HISAT2 alignment summary)
-# INDEX:   00_Cxt_Indexed_Genome/CtarK1_index (built by 02.1_runBuildCtark1Genome_apline.sh)
-# ENV:     rnaPseudo_clean
+# INDEX:   00_Cxt_Indexed_Genome/CtarK1_index (built by 02.1_runBuildCtark1Genome_alpine.sh)
+# ENV:     rnaPseudo_clean2
 # RESOURCES per task: 4 CPUs, 16 GB, 4 h
 # HISAT2 flags: --no-spliced-alignment (CUT&RUN is genomic, not RNA),
 #               --no-mixed (only pairs where both mates align), --mm (memory-mapped index)
@@ -66,8 +66,9 @@ echo "[$0] Job: $SLURM_JOB_NAME | Task ID: $SLURM_ARRAY_TASK_ID"
 module purge
 
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${SCRATCH}/miniconda3"; exit 1; }
-conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean || { echo "ERROR: conda activate rnaPseudo_clean failed"; exit 1; }
+PROJ=/projects/c832500103@colostate.edu
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
 
 # Stop on errors (after conda activation, which does not play well with set -e)
 set -eo pipefail

@@ -10,7 +10,7 @@
 #SBATCH --time=06:00:00
 #SBATCH --partition=acpu
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=c832500103@colostate.edu
+#SBATCH --mail-user=shawn.yates@colostate.edu
 
 ################################################################################
 # STEP 4.1.2: Combine the per-group matrices into one matrix (single job)
@@ -64,8 +64,9 @@ set -e
 # Environment setup
 # ----------------------------
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
-conda activate ${SCRATCH}/conda_envs/deeptools_kernel_v2
+PROJ=/projects/c832500103@colostate.edu
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/deeptools_kernel_v2 || { echo "ERROR: conda activate deeptools_kernel_v2 failed" >&2; exit 1; }
 
 # ----------------------------
 # Combine the group matrices (samples side by side)

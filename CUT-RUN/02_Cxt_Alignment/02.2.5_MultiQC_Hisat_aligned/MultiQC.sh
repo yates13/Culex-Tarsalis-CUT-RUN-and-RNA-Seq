@@ -26,7 +26,7 @@
 #            Cxt-CUTRUN-Pipeline-QC-fastp--HISAT2_multiqc_report.html
 #            Cxt-CUTRUN-Pipeline-QC-fastp--HISAT2_multiqc_report_data/
 #          Open the .html file in a browser (download it from Alpine first).
-# ENV:     rnaPseudo_clean (MultiQC)
+# ENV:     rnaPseudo_clean2 (MultiQC)
 # RESOURCES: 1 CPU, 16 GB, 1 h
 #
 # DIRECTORIES
@@ -71,8 +71,9 @@
 # ----------------------------
 # Environment setup
 # ----------------------------
-source /scratch/alpine/.colostate.edu/c832500103/miniconda3/etc/profile.d/conda.sh
-conda activate /scratch/alpine/.colostate.edu/c832500103/conda_envs/rnaPseudo_clean
+PROJ=/projects/c832500103@colostate.edu
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
 
 # ----------------------------
 # Paths (not used by the command below)
@@ -84,11 +85,11 @@ conda activate /scratch/alpine/.colostate.edu/c832500103/conda_envs/rnaPseudo_cl
 # Run MultiQC on the fastp and HISAT2 outputs
 # ----------------------------
 multiqc \
-    /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/01_Cxt_FastP/01.1_Cxt_fastp_out \
-    /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2_Cxt_HisatAligned_Cleaned \
+    /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/01_Cxt_FastP/01.1_Cxt_fastp_out \
+    /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2_Cxt_HisatAligned_Cleaned \
     --ignore "*.err" \
     --ignore "logs/" \
-    -o /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2.5_MultiQC_Hisat_aligned \
+    -o /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2.5_MultiQC_Hisat_aligned \
     -f \
     --title "Cxt CUT&RUN Pipeline QC - fastp + HISAT2"
 #-c multiqc_config.yaml

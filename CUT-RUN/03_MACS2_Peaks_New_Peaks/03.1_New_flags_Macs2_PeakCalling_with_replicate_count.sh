@@ -10,7 +10,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=c832500103@colostate.edu
+#SBATCH --mail-user=shawn.yates@colostate.edu
 
 ################################################################################
 # STEP 3.1: Call peaks with MACS2 on every merged BAM (one job, loops over samples)
@@ -62,8 +62,9 @@ set -eo pipefail
 # Environment setup
 # ----------------------------
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh
-conda activate ${SCRATCH}/conda_envs/macs2_env
+PROJ=/projects/c832500103@colostate.edu
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/macs2_env || { echo "ERROR: conda activate macs2_env failed" >&2; exit 1; }
 
 
 # ----------------------------

@@ -1,4 +1,4 @@
-#!/usr/bin/env bashy
+#!/usr/bin/env bash
 #SBATCH --partition=acpu
 #SBATCH --job-name=BamConvert_array
 #SBATCH --output=logs/%x.%A_%a.log
@@ -22,7 +22,7 @@
 #            <sample>.bam            (sorted)
 #            <sample>.bam.bai        (index)
 #            <sample>_flagstat.txt   (alignment stats from samtools flagstat)
-# ENV:     rnaPseudo_clean (samtools)
+# ENV:     rnaPseudo_clean2 (samtools)
 # RESOURCES per task: 8 CPUs, 32 GB, 3 h
 #
 # BEFORE SUBMITTING (run from 02_Cxt_Alignment):
@@ -65,8 +65,9 @@
 # ----------------------------
 module purge
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-source ${SCRATCH}/miniconda3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${SCRATCH}/miniconda3" >&2; exit 1; }
-conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean || { echo "ERROR: conda activate rnaPseudo_clean failed" >&2; exit 1; }
+PROJ=/projects/c832500103@colostate.edu
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
 date
 nthreads=$SLURM_CPUS_PER_TASK
 
