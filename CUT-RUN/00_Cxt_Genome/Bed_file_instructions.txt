@@ -1,0 +1,26 @@
+HOW TO MAKE CtarK1_TSS.bed
+==========================
+The reference regions for Step 4.1 (computeMatrix reference-point, TSS +/- 2 kb).
+Run after Gene_only_bed_instructions.txt. Keep a copy in /projects.
+ 
+NOTE: rewritten after the original instructions were lost. It is the same kind of
+file: one row per gene, strand included, so deepTools knows which way is upstream.
+ 
+Folder (outside the repo):
+    cd /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff
+ 
+Input: Culex-tarsalis_knwr_CtarK1.bed (from Gene_only_bed_instructions.txt)
+ 
+1. Reduce each gene to its transcription start site (1 bp):
+   + strand genes start at the gene start, - strand genes start at the gene end.
+    awk 'BEGIN{OFS="\t"} { if ($6=="+") print $1,$2,$2+1,$4,$5,$6; else print $1,$3-1,$3,$4,$5,$6 }' Culex-tarsalis_knwr_CtarK1.bed | sort -k1,1 -k2,2n > CtarK1_TSS.bed
+ 
+2. Check it
+    wc -l CtarK1_TSS.bed Culex-tarsalis_knwr_CtarK1.bed    # same number of rows
+    head -3 CtarK1_TSS.bed                                  # end = start + 1, strand in column 6
+ 
+3. Check against the old Step 4.1 output, as in step 4 of Gene_only_bed_instructions.txt
+   (use CtarK1_TSS.bed in place of the gene BED).
+ 
+4. Step 4.1 reads it from:
+    ${SCRATCH}/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS.bed

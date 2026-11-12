@@ -1,0 +1,36 @@
+HOW TO MAKE genes_only.gff3 AND Culex-tarsalis_knwr_CtarK1.bed
+================================================================
+Reference files for Step 4 (deepTools). Run once on a login node. The files are
+small, so keep a copy in /projects (scratch deletes files after 90 days).
+ 
+NOTE: these steps were rewritten after the original instructions were lost. They
+rebuild the same files from the annotation. Check the result with step 4 below.
+ 
+Folder (outside the repo):
+    G=/scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff
+    cd $G
+ 
+Input: Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3 (CtarK1 annotation)
+ 
+1. Keep only the gene lines (and the header lines) -> genes_only.gff3
+    awk -F'\t' '/^#/ {print; next} $3=="gene"' Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3 > genes_only.gff3
+ 
+2. Convert the genes to a 6-column BED (chrom, start, end, gene ID, score, strand).
+   GFF3 is 1-based and BED is 0-based, so start is the GFF start minus 1.
+    awk -F'\t' 'BEGIN{OFS="\t"} !/^#/ && $3=="gene" { id=$9; sub(/;.*/,"",id); sub(/^ID=/,"",id); print $1,$4-1,$5,id,0,$7 }' genes_only.gff3 | sort -k1,1 -k2,2n > Culex-tarsalis_knwr_CtarK1.bed
+ 
+3. Look at the result
+    head -3 Culex-tarsalis_knwr_CtarK1.bed
+    grep -vc '^#' genes_only.gff3        # gene count
+    wc -l < Culex-tarsalis_knwr_CtarK1.bed   # must be the same number
+ 
+4. Check against a Step 4.1 output from the original files (run from 04_Deeptools).
+   Every gene in an old region_<GROUP>.bed must be in the new BED:
+    cut -f4 region_BF.bed | sort > /tmp/old_ids.txt
+    cut -f4 Culex-tarsalis_knwr_CtarK1.bed | sort > /tmp/new_ids.txt
+    comm -23 /tmp/old_ids.txt /tmp/new_ids.txt | wc -l     # must be 0
+   Genes only in the new BED are expected if 4.1 was run with --skipZeros, which
+   drops genes with no signal. If the first number is not 0, the gene ID format
+   differs (for example an ID=gene- prefix); look at: head -3 region_BF.bed
+ 
+Next: Bed_file_instructions.txt (CtarK1_TSS.bed).
