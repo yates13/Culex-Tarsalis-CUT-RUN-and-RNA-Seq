@@ -8,7 +8,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=c832500103@colostate.edu  # CHANGE to your own address
+#SBATCH --mail-user=shawn.yates@colostate.edu  # CHANGE to your own address
 
 ################################################################################
 # STEP 2.1: Build the HISAT2 index for the C. tarsalis CtarK1 genome
@@ -19,7 +19,7 @@
 #
 # Submit from the folder that CONTAINS Cxt_Genome/:
 #     mkdir -p logs
-#     sbatch 02.1_runBuildCtark1Genome_apline.sh
+#     sbatch 02.1_runBuildCtark1Genome_alpine.sh
 ################################################################################
 
 #SCRATCH=/scratch/alpine/.colostate.edu/c832500103

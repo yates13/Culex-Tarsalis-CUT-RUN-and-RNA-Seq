@@ -11,7 +11,7 @@
 #SBATCH --array=1-96		# MUST equal the number of lines in r1_file_list.txt (see below)
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=c832500103@colostate.edu  # CHANGE to your own address
+#SBATCH --mail-user=shawn.yates@colostate.edu  # CHANGE to your own address
 
 
 ################################################################################

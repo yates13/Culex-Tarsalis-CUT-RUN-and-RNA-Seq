@@ -84,3 +84,5 @@ conda_envs/
 *.temp
 .DS_Store
 
+*.bak
+*.bak.*
