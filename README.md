@@ -1,8 +1,7 @@
 # Culex tarsalis CUT&RUN and RNA-seq Analysis
 
-This repository holds the analysis pipeline for a study of chromatin regulation in *Culex tarsalis* during infection with Rift Valley Fever Virus (RVFV). We used **CUT&RUN** and **RNA-seq** data to compare infection with two RVFV strains, **ZH501** and **MP12**.
+This repository holds the analysis pipeline for a study of chromatin regulation in *Culex tarsalis* during infection with Rift Valley Fever Virus (RVFV). We used **CUT&RUN** and **RNA-seq** data to compare infection with two RVFV strains, **ZH501** and **MP12**, alongside blood-fed (BF) and sugar-fed (SF) comparison groups.
 
-<!-- TODO (Study overview): confirm strain/site wording -->
 ## Study overview
 
 - **Virus strains:** RVFV ZH501 and MP12
@@ -105,7 +104,8 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 
 ### Step 1: Trimming and QC (`CUT-RUN/01_Cxt_FastP`)
 
-<!-- TODO: explain "Round1_Round2_With_Duplicates" (the pipeline output folder name) if it should appear here -->
+`Round1_Round2_With_Duplicates` is the name of the pipeline output folder. It holds the combined data from sequencing rounds 1 and 2, with duplicate reads kept (not removed).
+
 | Script | What it does | Environment |
 |--------|--------------|-------------|
 | `01.1_fastp_Cxt.sh` | Trims paired-end reads with fastp, one sample per SLURM array task. fastp also writes a QC report per sample. | `fastp_env` |
