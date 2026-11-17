@@ -9,7 +9,9 @@ Items marked **VERIFY** came from earlier notes and may be out of date.
 ## What this is
 
 CUT&RUN chromatin profiling of *Culex tarsalis* mosquitoes, aligned to genome
-assembly **CtarK1**, with matching RNA-seq. One near-term goal is reproducing
+assembly **CtarK1**, with matching RNA-seq. The RNA-seq scripts live in their
+own repo, `Culex-RNA-Seq`; conda env specs live in `Alpine_Conda_Envs`.
+One near-term goal is reproducing
 publication-style figures (peaks by genomic feature; peak distance to nearest
 gene start) from this data.
 
@@ -36,8 +38,8 @@ Sample names: `{group}-{target}-{day}-R{rep}`, for example `BF-AC-D1-R2`.
   `/projects` is backed up with a 250 GB quota. Conda lives in `/projects`.
   Results worth keeping are backed up off scratch.
 - **Conda:** `miniforge3` and `conda_envs` under the projects path. Activate
-  by full path with `load_env` from `config.sh`. Each env should have a `.yml`
-  in `CondaEnvs/`.
+  by full path with `load_env` from `config.sh`. Env specs (`envs/*.yml`) and
+  the build and verify scripts are in the `Alpine_Conda_Envs` repo.
 
 ## Pipeline steps
 

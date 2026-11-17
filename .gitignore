@@ -86,3 +86,4 @@ conda_envs/
 
 *.bak
 *.bak.*
+CUT-RUN/testdata/

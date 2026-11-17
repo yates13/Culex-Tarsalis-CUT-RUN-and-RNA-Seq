@@ -23,7 +23,7 @@ Last updated: 2026-11-16 (filled from earlier notes; correct anything stale)
 - Do region counts match across BF/MP/SF/ZH after 04.1? If not, rerun without
   `--skipZeros` before the `cbind` in 04.1.2.
 - Are `fastp_env`, `macs2_env` and `deeptools_kernel_v2` rebuilt in `/projects`
-  with `.yml` files in `CondaEnvs/`?
+  from the `Alpine_Conda_Envs` specs? (`bash scripts/verify_envs.sh` there)
 - `update_readme.sh` is untracked: commit it or add it to `.gitignore`?
 
 ## Next steps
