@@ -34,10 +34,9 @@ Run the steps in order. Each folder has its own scripts, numbered in run order.
 | Step | Folder | What it does | Status |
 |------|--------|--------------|--------|
 | 1 | [`CUT-RUN/01_Cxt_FastP`](CUT-RUN/01_Cxt_FastP) | Read trimming with fastp, sample renaming, MultiQC summary of the fastp reports | Scripts updated |
-| 2 | [`CUT-RUN/02_Cxt_Alignment`](CUT-RUN/02_Cxt_Alignment) | HISAT2 index and alignment, alignment QC, BAM conversion, replicate merging | Scripts updated (`Gvis_Function` and `HOW_TO_MAKE_FASTQTRIMMED_FILE` still to do) |
+| 2 | [`CUT-RUN/02_Cxt_Alignment`](CUT-RUN/02_Cxt_Alignment) | HISAT2 index and alignment, alignment QC, BAM conversion, replicate merging | Scripts updated |
 | 3 | [`CUT-RUN/03_MACS2_Peaks_New_Peaks`](CUT-RUN/03_MACS2_Peaks_New_Peaks) | Peak calling with MACS2 | `03.1` updated |
-| 4 | [`CUT-RUN/04_Deeptools`](CUT-RUN/04_Deeptools) | bigWigs, signal matrices, heatmaps and profiles with deepTools | `04.0`, `04.1`, `04.1.2`, `04.2` and `04.3` updated; the representative-replicate scripts still to do |
-| 5 | [`CUT-RUN/05_HomerAnnotation`](CUT-RUN/05_HomerAnnotation) | Peak annotation with HOMER | Not yet updated |
+| 4 | [`CUT-RUN/04_Deeptools`](CUT-RUN/04_Deeptools) | bigWigs, signal matrices, heatmaps and profiles with deepTools | All scripts updated, including the representative-replicate plots and heatmaps |
 
 To view tracks in IGV, see [`IGV_ChIP-Seq_Instructions.pdf`](CUT-RUN/IGV_ChIP-Seq_Instructions.pdf).
 
@@ -53,20 +52,16 @@ Each step activates its own conda environment.
 | `rnaPseudo_clean2` | Step 1.2 (MultiQC) and all of Step 2 (HISAT2, samtools, MultiQC) |
 | `macs2_env` | Step 3, peak calling |
 | `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` |
-| `homer_env` | Step 5, HOMER annotation |
 
-<!-- TODO: add .yml exports for rnaPseudo_clean2 and homer_env to CondaEnvs/, and update the conda lines in the scripts if the environments move -->
-The folder [`CondaEnvs`](CondaEnvs) holds one `.yml` file per environment. Build the ones that are missing with:
+The environment specs are kept in a separate repository, [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs): one `.yml` file per environment in `envs/`, plus scripts to build and check them in `/projects`. This pipeline needs four: `fastp_env`, `rnaPseudo_clean2`, `macs2_env` and `deeptools_kernel_v2`. That repository's README also explains how to install Miniforge first. To build the environments:
 
 ```bash
-bash CondaEnvs/make_envs.sh <ENV_DIR>
-```
-
-where `<ENV_DIR>` is the folder that will hold the environments (for example a `conda_envs` folder in `/projects`). Environments that already exist are skipped. To save an existing environment so it can be rebuilt later:
-
-```bash
-conda env export --from-history -p <ENV_DIR>/<name> | grep -v '^prefix:' > CondaEnvs/<name>.yml
-conda env export --no-builds    -p <ENV_DIR>/<name> | grep -v '^prefix:' > CondaEnvs/<name>.full.yml
+cd /projects/<your_username>
+git clone https://github.com/yates13/Alpine_Conda_Envs.git
+cd Alpine_Conda_Envs
+bash scripts/setup_conda.sh                  # one time: sends envs and the package cache to /projects
+sbatch scripts/build_envs.sbatch fastp_env   # repeat for rnaPseudo_clean2, macs2_env, deeptools_kernel_v2
+bash scripts/verify_envs.sh                  # confirms each environment is intact
 ```
 
 Scripts load conda like this. Set `PROJ` to your own `/projects` folder first:
@@ -81,7 +76,7 @@ conda activate ${PROJ}/conda_envs/<env_name>
 
 Files in `/scratch/alpine` are removed 90 days after they are created, and scratch is not backed up. Conda environments and pipeline outputs on scratch can disappear. To protect your work:
 
-- Keep scripts in this repository and environment files in `CondaEnvs/`.
+- Keep scripts in this repository and environment specs in the [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs) repository.
 - Build conda environments (and Miniconda) in `/projects`, which is backed up, not in scratch.
 - Copy the results you cannot regenerate off scratch: peak calls, matrices, merged BAMs and bigWigs. Keep a second copy of the raw reads somewhere other than scratch.
 - Intermediate files (trimmed FASTQs, SAMs, individual BAMs) can be regenerated from the raw reads and these scripts.
@@ -102,7 +97,9 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 | `01.1_fastp_Cxt.sh`, `01.2_multiqc_fastp.sh` | `$P/01_Cxt_FastP` |
 | `02.2`, `02.2.5` (`MultiQC.sh`), `02.3`, `02.4` | `$P/02_Cxt_Alignment` |
 | `03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh` | `$P/03_MACS2_Peaks_New_Peaks` |
-| `04.0`, `04.1`, `04.1.2`, `04.2`, `04.3` | `$P/04_Deeptools` (it needs `bw_chunks/` and writes `matrix_*.gz` and `region_*.bed` there) |
+| `04.0`, `04.1`, `04.1.2`, `04.2_BF/MP/SF/ZH_...`, `04.3_HeatMap_Individual_Bams_By_Treatment_updated.sh` | `$P/04_Deeptools` (it needs `bw_chunks/` and writes `matrix_*.gz` and `region_*.bed` there) |
+| `04.2_All_Marks_By_Day_Profile_HardCoded_Yaxis.sh` | `$P/04_Deeptools/04.2_Representative_Replicates` |
+| `04.3_Heat_Maps.sh` | `$P/04_Deeptools/04.3_Representative_Replicates_heat_maps` |
 
 ## Step details
 
@@ -132,10 +129,11 @@ sbatch --array=1-${N} 01.1_fastp_Cxt.sh
 
 A sample with no matching R2 file makes its task fail with `No R2 found`, so check `sacct` or the logs afterwards. Outputs per sample (in `OUTDIR`): `<sample>_R1_trimmed.fastq.gz`, `<sample>_R2_trimmed.fastq.gz`, `<sample>_fastp.html`, `<sample>_fastp.json`.
 
-**2. Fix sample names.** Run once on the fastp output folder after all tasks finish:
+**2. Fix sample names.** Run once after all tasks finish. The script renames the files in the folder you run it from, so go to the fastp output folder first:
 
 ```bash
-bash 01.1_fix_sample_names.sh <path_to_01.1_Cxt_fastp_out>
+cd <path_to_01.1_Cxt_fastp_out>
+bash <path_to_repo>/CUT-RUN/01_Cxt_FastP/01.1_fix_sample_names.sh
 ```
 
 Only the trimmed FASTQ files are renamed. The `.html` and `.json` reports keep their original names.
@@ -150,16 +148,15 @@ The MultiQC report is written to `01.2_FastP_MultiQC/MultiQC_out/`.
 
 ### Step 2: Index, alignment and BAMs (`CUT-RUN/02_Cxt_Alignment`)
 
-<!-- TODO: 02.1 uses a relative path (cd Cxt_Genome); switch it to absolute paths. Add Gvis_Function and HOW_TO_MAKE_FASTQTRIMMED_FILE. -->
 | Script | What it does | Environment |
 |--------|--------------|-------------|
-| `02.1_runBuildCtark1Genome_alpine.sh` | Builds the HISAT2 index for CtarK1 and writes `CtarK1_index.*.ht2` to `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean2` |
+| `02.1_runBuildCtark1Genome_alpine.sh` | Builds the HISAT2 index for CtarK1 from `Cxt_Genome/CtarK1.fa` and writes `CtarK1_index.*.ht2` next to `Cxt_Genome/`. Step 2.2 expects the index in `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean2` |
 | `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `rnaPseudo_clean2` |
 | `MultiQC.sh` (Step 2.2.5) | One MultiQC report covering the fastp and HISAT2 outputs. | `rnaPseudo_clean2` |
 | `02.3_runBam_array.sh` | Converts each SAM to a sorted, indexed BAM with samtools, one sample per array task. Safe to resubmit: finished samples are skipped. | `rnaPseudo_clean2` |
 | `02.4_BamMerge_With_replicate_counts_array.sh` | Merges the replicate BAMs of each condition, one condition per array task. | `rnaPseudo_clean2` |
 
-**2.1 Build the index (once).** Skip this if the eight `CtarK1_index.*.ht2` files already exist in `00_Cxt_Indexed_Genome/`.
+**2.1 Build the index (once).** Skip this if the eight `CtarK1_index.*.ht2` files already exist in `00_Cxt_Indexed_Genome/`. The script uses relative paths (`cd Cxt_Genome`), so submit it from the folder that contains a `Cxt_Genome/` folder with `CtarK1.fa` in it; the index is written to that same folder. If you saved the genome somewhere else, edit the `cd Cxt_Genome` and `hisat2-build` lines to match. Either way, the index must end up in `00_Cxt_Indexed_Genome/`, which is where Step 2.2 looks for it.
 
 ```bash
 mkdir -p logs
@@ -234,7 +231,7 @@ sbatch 03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh
 
 ### Step 4: deepTools (`CUT-RUN/04_Deeptools`)
 
-Environment for all Step 4 scripts: `deeptools_kernel_v2`. Submit from `04_Deeptools`.
+Environment for all Step 4 scripts: `deeptools_kernel_v2`. Submit from `04_Deeptools`, except the two representative-replicate scripts (4.2 and 4.3 below), which are submitted from their own subfolders.
 
 **4.0 Input-subtracted bigWigs** (`00_Create_Bigwigs_Individual_Bams_ARRAY.sh`). One BAM per array task; each treatment BAM from Step 2.3 is compared with a Day 1 input BAM of the same treatment using `bamCompare` (subtract, BPM-normalized):
 
@@ -280,12 +277,29 @@ sbatch 04.3_HeatMap_Individual_Bams_By_Treatment_updated.sh "Base Title"
 
 The sample list s read from the combined matrix, so no other input files are needed. Outputs: `Figures/matrix_<TARGET>_<DAY>_all_pops_heatmap.png` and `matrix_<TARGET>_<DAY>_all_pops.gz`. The log ends with a list of the heatmaps and their sizes.
 
-<!-- TODO: document 04.2_Representative_Replicates and 04.3_Representative_Replicates_heat_maps once they are reviewed -->
+**4.2 Representative-replicate profile plots** (`04.2_Representative_Replicates/04.2_All_Marks_By_Day_Profile_HardCoded_Yaxis.sh`). Run after 4.1.2. One plot per target (AC, ME, SR) and day (D1, D3), with one line per group (BF, MP, ZH, SF), each drawn from a single representative replicate so the four groups can be compared on one graph. It is a single job (not an array) with 2 CPUs, 64 GB and 1 hour. Submit from `04_Deeptools/04.2_Representative_Replicates`:
 
-### Step 5: HOMER annotation (`CUT-RUN/05_HomerAnnotation`)
+```bash
+mkdir -p logs
+sbatch 04.2_All_Marks_By_Day_Profile_HardCoded_Yaxis.sh
+```
 
-<!-- TODO: scripts not yet reviewed -->
-Not yet documented.
+Which replicate represents each group, target and day is set in the `REP_MAP` table at the top of the script (for example `[BF_AC_D1]="R2"`). Every combination needs an entry; a missing entry, or a replicate that is not in the matrix, leaves that group off the plot with a message and the job still finishes. The y-axis is fixed for every plot (`YMIN` -0.10, `YMAX` 0.55); change both values if new data falls outside that range. Outputs: `Figures/All_Marks_By_Day/<DAY>/<TARGET>_<DAY>_AllMarks.png` (6 plots) and `matrix_<TARGET>_<DAY>_AllMarks.gz` in `04_Deeptools`. Check with:
+
+```bash
+ls Figures/All_Marks_By_Day/D1 Figures/All_Marks_By_Day/D3   # 3 plots in each
+grep "skipping" logs/*.log                                    # groups or plots left out
+grep "using" logs/*.log                                       # which sample was chosen for each group
+```
+
+**4.3 Representative-replicate heatmaps** (`04.3_Representative_Replicates_heat_maps/04.3_Heat_Maps.sh`). Run after 4.1.2. The same representative replicates as 4.2, shown as heatmaps: one per target and day, with one side-by-side panel per group (SF, BF, MP, ZH). It is a single job with 8 CPUs, 64 GB and 4 hours. A title is required, and the script exits with an error without one. Each heatmap is titled `<Base Title> - <TARGET> <DAY>`. Submit from `04_Deeptools/04.3_Representative_Replicates_heat_maps`:
+
+```bash
+mkdir -p logs
+sbatch 04.3_Heat_Maps.sh "Base Title"
+```
+
+Its `REP_MAP` must be identical to the one in the 4.2 script, so the heatmaps and profile plots show the same samples; if you change one, change the other. Outputs: `Figures/All_Marks_By_Day_Heatmap/<DAY>/<TARGET>_<DAY>_AllMarks_heatmap.png` (6 heatmaps) and `matrix_<TARGET>_<DAY>_AllMarks_Heatmap.gz` in `04_Deeptools`. Check with `ls` on the `D1` and `D3` folders and `grep "skipping" logs/*.log`. Unlike 4.2, this job ends with an error if any target or day was skipped or failed.
 
 ## Known issues and notes
 
@@ -324,17 +338,17 @@ Start the file with this header (don't put any code above it):
 
 Run `mkdir -p logs` before submitting.
 
-<!-- TODO (Reference genome): the annotation listed here is a .gff3 but the working annotation in use is a filtered .gtf -->
 ## Reference genome
 
 - **Assembly:** *Culex tarsalis* CtarK1 (Kern National Wildlife Refuge colony), Main et al. 2021, [Whole-genome assembly of *Culex tarsalis*](https://doi.org/10.1093/g3journal/jkaa063), G3 11(2):jkaa063. Genome and annotation files: <https://osf.io/mdwqx/>
 - **Annotation:** `Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3`
 - **Derived files:** `genes_only.gff3`, `CtarK1_TSS.bed`, and `Culex-tarsalis_knwr_CtarK1.bed`, built with the steps in `Bed_file_instructions.txt` and `Gene_only_bed_instructions.txt`
-- The HISAT2 index is built in Step 2.1 and written to `00_Cxt_Indexed_Genome/`
+- The HISAT2 index is built in Step 2.1 and kept in `00_Cxt_Indexed_Genome/`
+- No Step 1 to 4 script reads the annotation directly. Step 4.1 reads only `CtarK1_TSS.bed`, expected at `Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS.bed`. Keep a copy of the three derived files in `/projects`, because scratch deletes them after 90 days. The RNA-seq steps use their own annotation, in the [Culex-RNA-Seq](https://github.com/yates13/Culex-RNA-Seq) repository.
 
 ## Data
 
-Raw sequencing reads are not included in this repository.
+Raw sequencing reads are not included in this repository. Step 1 expects the raw FASTQs, named `<sample>_R1_001.fastq.gz` and `<sample>_R2_001.fastq.gz`, together in one folder (`Cxt_Cut_Run_Raw_Files` in our runs), with the array sized to the number of R1 files (96 in our run). Scratch deletes files after 90 days, so restore the full set from your backup before rerunning Step 1.
 
 ## Notes
 
@@ -343,15 +357,13 @@ Raw sequencing reads are not included in this repository.
 
 ## TODO
 
-- [ ] Finish updating the scripts through Step 4
-  - [ ] Step 2: `Gvis_Function`, `HOW_TO_MAKE_FASTQTRIMMED_FILE`
-  - [ ] Step 3: any other MACS2 scripts
-  - [ ] Step 4: the representative-replicate scripts (`04.2_Representative_Replicates`, `04.3_Representative_Replicates_heat_maps`)
-- [ ] Add the R scripts to the repo and document how to run them
-- [ ] Update and document Step 5 (HOMER)
-- [ ] Rebuild the lost conda environments (`fastp_env`, `macs2_env`, `deeptools_kernel_v2`) in `/projects`, export `.yml` files for all environments, and update the conda lines in the scripts
+- [ ] Add the R scripts (including `Gvis_Function`) to the repo and document how to run them
+- [ ] Rebuild the lost conda environments (`fastp_env`, `macs2_env`, `deeptools_kernel_v2`) in `/projects` from the specs in [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs) and confirm they work with `bash scripts/verify_envs.sh`
+- [ ] Switch Steps 3 and 4.0 to replicate-matched input controls when all input replicates exist
+- [x] Finish updating the scripts through Step 4, including the representative-replicate scripts
+- [x] Remove the HOMER step (not part of this analysis)
+- [x] Document the `Cxt_Genome` path in `02.1` (it follows where the genome is saved)
+- [x] Move the conda environment specs to Alpine_Conda_Envs
 - [x] Confirm which environment the Step 2 scripts use (`rnaPseudo_clean2`)
 - [x] Back up pipeline results and raw reads off scratch
-- [ ] Switch Steps 3 and 4.0 to replicate-matched input controls when all input replicates exist
-- [ ] Fix the relative `Cxt_Genome` path in `02.1`
 - [x] Use one `--mail-user` address across all scripts
