@@ -75,7 +75,7 @@ conda activate ${PROJ}/conda_envs/<env_name>
 
 Files in `/scratch/alpine` are removed 90 days after they are created, and scratch is not backed up. Conda environments and pipeline outputs on scratch can disappear. To protect your work:
 
-- Keep scripts in this repository and environment specs in the [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs) repository.
+- Scripts live in this repo. The conda environment files live in [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs).
 - Build conda environments (and Miniconda) in `/projects`, which is backed up, not in scratch.
 - Copy the results you cannot regenerate off scratch: peak calls, matrices, merged BAMs and bigWigs. Keep a second copy of the raw reads somewhere other than scratch.
 - Intermediate files (trimmed FASTQs, SAMs, individual BAMs) can be regenerated from the raw reads and these scripts.
