@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --partition=acpu
 #SBATCH --job-name=All_Marks_By_Day_Heatmap
-#SBATCH --output=out_log/%x.%A-%a.log
-#SBATCH --error=err_log/%x.%A-%a.err
+#SBATCH --output=logs/%x.%A-%a.log
+#SBATCH --error=logs/%x.%A-%a.err
 #SBATCH --time=4:00:00
 #SBATCH --qos=cpu-normal
 #SBATCH --nodes=1
@@ -40,7 +40,7 @@
 #
 # DIRECTORIES
 #   Run from 04_Deeptools/04.3_Representative_Replicates_heat_maps. Job logs go
-#   to out_log/ and err_log/ in the folder you submit from. Everything else uses
+#   to logs/ in the folder you submit from. Everything else uses
 #   full paths.
 #   DEEPTOOLS_DIR = <path>/04_Deeptools
 #   BW_DIR        = DEEPTOOLS_DIR/00_BigWig_Files_Individual_Bams
@@ -49,7 +49,7 @@
 #                   (created automatically, with D1/ and D3/ subfolders)
 #
 # BEFORE SUBMITTING (run from 04.3_Representative_Replicates_heat_maps)
-#   1. mkdir -p out_log err_log
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so these folders
 #         must exist ahead of time or the job fails with no log.)
 #   2. Confirm Step 4.1.2 finished:
@@ -75,8 +75,8 @@
 #
 # CHECKING THE RESULTS
 #   ls <OUTDIR>/D1 <OUTDIR>/D3          # 3 heatmaps in each folder
-#   grep "skipping" out_log/*.log       # groups or plots that were left out
-#   grep "using" out_log/*.log          # which sample was chosen for each group
+#   grep "skipping" logs/*.log       # groups or plots that were left out
+#   grep "using" logs/*.log          # which sample was chosen for each group
 #   The job exits with an error at the end if any target/day was skipped or failed.
 #
 # NOTES
@@ -103,7 +103,7 @@ DEEPTOOLS_DIR="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/04_
 BW_DIR="${DEEPTOOLS_DIR}/00_BigWig_Files_Individual_Bams"
 MATRIX="${DEEPTOOLS_DIR}/matrix_combined_gene_only_bed_file.gz"
 OUTDIR="${DEEPTOOLS_DIR}/04.3_Representative_Replicates_heat_maps/Figures/All_Marks_By_Day_Heatmap"
-mkdir -p "$OUTDIR" out_log err_log
+mkdir -p "$OUTDIR" logs
 
 # ----------------------------
 # Checks: tools, input matrix, title argument

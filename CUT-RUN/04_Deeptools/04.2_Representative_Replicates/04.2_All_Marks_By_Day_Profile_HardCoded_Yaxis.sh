@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH --partition=acpu
 #SBATCH --job-name=All_Marks_By_Day_Profile
-#SBATCH --output=out_log/%x.%A-%a.log
-#SBATCH --error=err_log/%x.%A-%a.err
+#SBATCH --output=logs/%x.%A-%a.log
+#SBATCH --error=logs/%x.%A-%a.err
 #SBATCH --time=1:00:00
 #SBATCH --qos=cpu-normal
 #SBATCH --nodes=1
@@ -35,15 +35,15 @@
 #   TARGET: AC = H3K27ac, ME = H3K9me3, SR = SREBP.
 #
 # DIRECTORIES
-#   Run from 04_Deeptools/04.2_Representative_Replicates. Job logs go to out_log/
-#   and err_log/ in the folder you submit from. Everything else uses full paths.
+#   Run from 04_Deeptools/04.2_Representative_Replicates. Job logs go to logs/
+#   in the folder you submit from. Everything else uses full paths.
 #   DEEPTOOLS_DIR = <path>/04_Deeptools
 #   BW_DIR        = DEEPTOOLS_DIR/00_BigWig_Files_Individual_Bams
 #   OUTDIR        = DEEPTOOLS_DIR/04.2_Representative_Replicates/Figures/All_Marks_By_Day
 #                   (created automatically, with D1/ and D3/ subfolders)
 #
 # BEFORE SUBMITTING (run from 04.2_Representative_Replicates)
-#   1. mkdir -p out_log err_log
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so these folders
 #         must exist ahead of time or the job fails with no log.)
 #   2. Confirm Step 4.1.2 finished:
@@ -71,8 +71,8 @@
 #
 # CHECKING THE RESULTS
 #   ls <OUTDIR>/D1 <OUTDIR>/D3          # 3 plots in each folder
-#   grep "skipping" out_log/*.log       # groups or plots that were left out
-#   grep "using" out_log/*.log          # which sample was chosen for each group
+#   grep "skipping" logs/*.log       # groups or plots that were left out
+#   grep "using" logs/*.log          # which sample was chosen for each group
 #
 # NOTES
 #   - The script stops on any error (set -e), for example if a sample name is
@@ -101,7 +101,7 @@ BW_DIR="${DEEPTOOLS_DIR}/00_BigWig_Files_Individual_Bams"
 #MATRIX="${DEEPTOOLS_DIR}/bigwiglist_Individual_Bams_gene_only_bed_file.gz"
 MATRIX="${DEEPTOOLS_DIR}/matrix_combined_gene_only_bed_file.gz"
 OUTDIR="${DEEPTOOLS_DIR}/04.2_Representative_Replicates/Figures/All_Marks_By_Day"
-mkdir -p "$OUTDIR" out_log err_log
+mkdir -p "$OUTDIR" logs
 
 # Hard-coded shared y-axis range for every graph (from visual inspection of prior plots)
 YMIN="-0.10"

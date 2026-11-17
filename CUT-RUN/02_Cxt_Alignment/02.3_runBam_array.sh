@@ -26,7 +26,7 @@
 # RESOURCES per task: 8 CPUs, 32 GB, 3 h
 #
 # BEFORE SUBMITTING (run from 02_Cxt_Alignment):
-#   1. mkdir -p out_log err_log
+#   1. mkdir -p logs
 #        (SLURM opens the log files before the script starts, so these folders
 #         must exist ahead of time or the job fails with no log.)
 #   2. Build the SAM list. Task N processes line N of this file:
