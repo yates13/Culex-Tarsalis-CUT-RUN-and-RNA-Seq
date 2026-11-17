@@ -21,7 +21,7 @@ export CONDA_ENVS="$PROJECTS/conda_envs"        # VERIFY
 # One env per step. Activate by full path: load_env "$ENV_FASTP"
 export ENV_FASTP="$CONDA_ENVS/fastp_env"
 export ENV_MULTIQC="$CONDA_ENVS/rnaPseudo_clean2"
-export ENV_HISAT2="$CONDA_ENVS/hisat2_env"
+export ENV_HISAT2="$CONDA_ENVS/rnaPseudo_clean2"   # 02.x scripts run HISAT2 and samtools from this env
 export ENV_MACS2="$CONDA_ENVS/macs2_env"
 export ENV_DEEPTOOLS="$CONDA_ENVS/deeptools_kernel_v2"
 export ENV_HOMER="$CONDA_ENVS/homer_env"
@@ -33,7 +33,7 @@ export GTF="$SCRATCH/RNA_Seq/Genome/GTF/Culex-tarsalis_knwr_BASEFEATURES_CtarK1.
 # ---- Pipeline layout ----
 export PIPE="$SCRATCH/Cxt_Cut_Run_Pipeline"
 export REPO="$PIPE/Culex-Tarsalis-CUT-RUN-and-RNA-Seq"   # VERIFY: location of the git clone
-export RAW_DIR="$PIPE/Cxt_Cut_Run_Raw_Files"             # VERIFY: parent directory
+export RAW_DIR="$SCRATCH/Cxt_Cut_Run_Raw_Files"
 export GENOME_DIR="$PIPE/00_Cxt_Genome"
 export HISAT2_INDEX_DIR="$PIPE/00_Cxt_Indexed_Genome"
 export ROUND="$PIPE/Round1_Round2_With_Duplicates"
