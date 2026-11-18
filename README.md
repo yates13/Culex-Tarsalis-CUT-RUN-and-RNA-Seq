@@ -81,6 +81,37 @@ Files in `/scratch/alpine` are removed 90 days after they are created, and scrat
 - Copy the results you cannot regenerate off scratch: peak calls, matrices, merged BAMs and bigWigs. Keep a second copy of the raw reads somewhere other than scratch.
 - Intermediate files (trimmed FASTQs, SAMs, individual BAMs) can be regenerated from the raw reads and these scripts.
 
+## How to use Slurm
+
+Common commands: sbatch, srun, scancel, sacct, squeue, sinfo
+
+```bash
+sbatch [options] script [args]                   # submit a job
+scancel 12345                                    # cancel job 12345
+scancel {31415..31425}                           # cancel a range of sequential job IDs
+squeue | grep <your_username>                    # just your jobs
+sacct -j <jobid> --format=JobID,State,ExitCode   # how a job finished
+```
+
+Put `--array` before the script name (`sbatch --array=1-96 script.sh`). Anything after the script name is passed to the script, not to sbatch.
+
+### Writing a Slurm job script
+
+Start the file with this header (don't put any code above it):
+
+```bash
+#!/bin/bash
+#SBATCH --partition=acpu
+#SBATCH --qos=cpu-normal
+#SBATCH --job-name=YourJobNameHere
+#SBATCH --output=logs/%x.%j.out
+#SBATCH --error=logs/%x.%j.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+```
+
+Run `mkdir -p logs` before submitting.
+
 ## Running
 
 1. Edit the paths at the top of each script to match your directory, and the `--mail-user` address in the `#SBATCH` header.
@@ -334,37 +365,6 @@ Its `REP_MAP` must be identical to the one in the 4.2 script, so the heatmaps an
 - **Email address.** Every script has a `--mail-user` line. Change it to your own.
 - **The `@` in the Alpine path breaks HISAT2.** Activate `hisat2_env_fixed` through `/projects/.colostate.edu/<user>`, and escape the `@` in its `Config_heavy.pl` once after building it. Without both, `hisat2` exits with code 255 and logs `Global symbol "@colostate"`. The commands are in `CUT-RUN/RERUN_2026-11.md`.
 - **Build conda envs as a batch job.** `conda create` on the login node can hang for an hour on `/projects`. Run it with `sbatch --wrap` instead.
-
-## How to use Slurm
-
-Common commands: sbatch, srun, scancel, sacct, squeue, sinfo
-
-```bash
-sbatch [options] script [args]                   # submit a job
-scancel 12345                                    # cancel job 12345
-scancel {31415..31425}                           # cancel a range of sequential job IDs
-squeue | grep <your_username>                    # just your jobs
-sacct -j <jobid> --format=JobID,State,ExitCode   # how a job finished
-```
-
-Put `--array` before the script name (`sbatch --array=1-96 script.sh`). Anything after the script name is passed to the script, not to sbatch.
-
-### Writing a Slurm job script
-
-Start the file with this header (don't put any code above it):
-
-```bash
-#!/bin/bash
-#SBATCH --partition=acpu
-#SBATCH --qos=cpu-normal
-#SBATCH --job-name=YourJobNameHere
-#SBATCH --output=logs/%x.%j.out
-#SBATCH --error=logs/%x.%j.err
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-```
-
-Run `mkdir -p logs` before submitting.
 
 ## Reference genome
 
