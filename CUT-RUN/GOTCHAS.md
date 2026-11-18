@@ -7,7 +7,12 @@ hour. Format: symptom, cause, fix.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| Perl-based tool fails on a path | The `c832500103@colostate.edu` path contains `@`, which Perl reads as an array | Use the `.colostate.edu/c832500103` form everywhere (`config.sh`) |
+| Perl-based tool fails on a path | The `c832500103@colostate.edu` path contains `@`, which Perl reads as an array | Use the `.colostate.edu/c832500103` form everywhere (`config.sh`). For `hisat2_env_fixed`, also escape the `@` in `Config_heavy.pl` (see `RERUN_2026-11.md`) |
+| `hisat2` exits 255 after about 30 s: `Global symbol "@colostate"` in `Config_heavy.pl` | The env's Perl config has the `@` path written into it; the no-`@` `PROJ=` alone is not enough | Escape it once (`RERUN_2026-11.md`); test with `perl -V`, not `perl -MConfig` |
+| Job exits 127 at once: `hisat2`, `samtools` or `multiqc` not found | Script activated `rnaPseudo_clean2`, which has none of them | Step 2 uses `hisat2_env_fixed`, MultiQC uses `multiqc_env`; check with `ls <env>/bin/<tool>` before submitting |
+| `conda create` hangs for an hour at "Executing transaction" (process in `D` state) | `/projects` stalls on the login node; quota was fine | Build envs with `sbatch --wrap 'conda create -y -p ...'` |
+| A multi-line paste runs each line as its own command | The paste broke the line after each trailing backslash | Put long `git add` commands on one line |
+| A file pasted into nano has every line doubled | Terminal paste added a blank line after each line | Check `wc -l`; if it is 2N-1, keep the odd lines: `awk 'NR % 2 == 1'` |
 | Same file appears under two paths | Alpine mounts scratch under two different path strings | Use only the `config.sh` form; never mix them in one file list |
 | `hisat2 --version` segfaults | Login node CPU differs from compute nodes; the env is fine | Test on a compute node with `srun` |
 | Env cannot be activated by name | Env was created with `--prefix` | Activate by full path (`load_env`) |

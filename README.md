@@ -48,25 +48,26 @@ Each step activates its own conda environment.
 | Environment | Used in |
 |-------------|---------|
 | `fastp_env` | Step 1.1, trimming |
-| `rnaPseudo_clean2` | Step 1.2 (MultiQC) and all of Step 2 (HISAT2, samtools, MultiQC) |
+| `multiqc_env` | Step 1.2 and Step 2.2.5, MultiQC |
+| `hisat2_env_fixed` | Steps 2.1 to 2.4, HISAT2 and samtools (activate through the `/projects` path without `@`, see Known issues) |
 | `macs2_env` | Step 3, peak calling |
 | `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` |
 
-The environment specs are kept in a separate repository, [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs): one `.yml` file per environment in `envs/`, plus scripts to build and check them in `/projects`. This pipeline needs four: `fastp_env`, `rnaPseudo_clean2`, `macs2_env` and `deeptools_kernel_v2`. That repository's README also explains how to install Miniforge first. To build the environments:
+The environment specs are kept in a separate repository, [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs): one `.yml` file per environment in `envs/`, plus scripts to build and check them in `/projects`. This pipeline needs five: `fastp_env`, `multiqc_env`, `hisat2_env_fixed`, `macs2_env` and `deeptools_kernel_v2`. The `multiqc_env` and `hisat2_env_fixed` specs are not in Alpine_Conda_Envs yet. That repository's README also explains how to install Miniforge first. To build the environments:
 
 ```bash
 cd /projects/<your_username>
 git clone https://github.com/yates13/Alpine_Conda_Envs.git
 cd Alpine_Conda_Envs
 bash scripts/setup_conda.sh                  # one time: sends envs and the package cache to /projects
-sbatch scripts/build_envs.sbatch fastp_env   # repeat for rnaPseudo_clean2, macs2_env, deeptools_kernel_v2
+sbatch scripts/build_envs.sbatch fastp_env   # repeat for multiqc_env, hisat2_env_fixed, macs2_env, deeptools_kernel_v2
 bash scripts/verify_envs.sh                  # confirms each environment is intact
 ```
 
-Scripts load conda like this. Set `PROJ` to your own `/projects` folder first:
+Scripts load conda like this. Set `PROJ` to your own `/projects` folder first, in the form without `@` (`/projects/.colostate.edu/c832500103`, not `/projects/c832500103@colostate.edu`), because Perl-based tools such as `hisat2` break on the `@`:
 
 ```bash
-PROJ=/projects/<your_username>
+PROJ=/projects/.colostate.edu/<your_username>
 source ${PROJ}/miniforge3/etc/profile.d/conda.sh
 conda activate ${PROJ}/conda_envs/<env_name>
 ```
@@ -113,7 +114,7 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 | `01.0.2_Md5sum_Check.sh` | Checks every raw FASTQ in `00_Merged_Raw` against its `.md5`, one file per SLURM array task. | none |
 | `01.1_fastp_Cxt.sh` | Trims paired-end reads with fastp, one sample per SLURM array task. fastp also writes a QC report per sample. | `fastp_env` |
 | `01.1_fix_sample_names.sh` | Renames `*_Cxt_R{1,2}_trimmed.fastq.gz` to `*-Cxt_R{1,2}_trimmed.fastq.gz` so sample names are consistent. | none |
-| `01.2_multiqc_fastp.sh` | Combines the per-sample fastp reports into one MultiQC report. | `rnaPseudo_clean2` |
+| `01.2_multiqc_fastp.sh` | Combines the per-sample fastp reports into one MultiQC report. | `multiqc_env` |
 
 **0.1. Merge the sequencing rounds.** The raw reads came in three deliveries inside `Cxt_Cut_Run_Raw_Files`, each nested differently (`First_Round_Sequencing/CutRun_DNA_Rd1_30-1326595428/00_fastq/`, `Second_Round_Sequencing/CutRun_DNA_Rd2_30-1352505226/`, `Third_Round_Sequencing/CutRun_MP12_30-1360459436/`). Three samples (MP-ME-D3-R1, R2 and R3) were sequenced in both rounds 2 and 3. The latest round always wins, so they use the round 3 copy. The script links one copy of every sample into `Cxt_Cut_Run_Raw_Files/00_Merged_Raw` (96 samples, 192 FASTQs) and writes `merge_manifest.tsv` there, listing the round each sample came from and any older copy ignored. The round folders are not changed. It takes seconds, so run it on the login node:
 
@@ -175,13 +176,13 @@ The MultiQC report is written to `01.2_FastP_MultiQC/MultiQC_out/`.
 
 | Script | What it does | Environment |
 |--------|--------------|-------------|
-| `02.1_runBuildCtark1Genome_alpine.sh` | Builds the HISAT2 index for CtarK1 from `Cxt_Genome/CtarK1.fa` and writes `CtarK1_index.*.ht2` next to `Cxt_Genome/`. Step 2.2 expects the index in `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/`. Run once. | `rnaPseudo_clean2` |
-| `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `rnaPseudo_clean2` |
-| `MultiQC.sh` (Step 2.2.5) | One MultiQC report covering the fastp and HISAT2 outputs. | `rnaPseudo_clean2` |
-| `02.3_runBam_array.sh` | Converts each SAM to a sorted, indexed BAM with samtools, one sample per array task. Safe to resubmit: finished samples are skipped. | `rnaPseudo_clean2` |
-| `02.4_BamMerge_With_replicate_counts_array.sh` | Merges the replicate BAMs of each condition, one condition per array task. | `rnaPseudo_clean2` |
+| `02.1_runBuildCtark1Genome_alpine.sh` | Builds the HISAT2 index for CtarK1 from `Cxt_Genome/CtarK1.fa` and writes `CtarK1_index.*.ht2` next to `Cxt_Genome/`. Step 2.2 expects the index in `Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/hisatIndex/`. Run once. | `hisat2_env_fixed` |
+| `02.2_Cxt_AlignArray_Hisat.sh` | Aligns each trimmed read pair with HISAT2, one sample per array task. Writes `<sample>.sam` and `<sample>.hisat2.log` to `02.2_Cxt_HisatAligned_Cleaned/`. | `hisat2_env_fixed` |
+| `MultiQC.sh` (Step 2.2.5) | One MultiQC report covering the fastp and HISAT2 outputs. | `multiqc_env` |
+| `02.3_runBam_array.sh` | Converts each SAM to a sorted, indexed BAM with samtools, one sample per array task. Safe to resubmit: finished samples are skipped. | `hisat2_env_fixed` |
+| `02.4_BamMerge_With_replicate_counts_array.sh` | Merges the replicate BAMs of each condition, one condition per array task. | `hisat2_env_fixed` |
 
-**2.1 Build the index (once).** Skip this if the eight `CtarK1_index.*.ht2` files already exist in `00_Cxt_Indexed_Genome/`. The script uses relative paths (`cd Cxt_Genome`), so submit it from the folder that contains a `Cxt_Genome/` folder with `CtarK1.fa` in it; the index is written to that same folder. If you saved the genome somewhere else, edit the `cd Cxt_Genome` and `hisat2-build` lines to match. Either way, the index must end up in `00_Cxt_Indexed_Genome/`, which is where Step 2.2 looks for it.
+**2.1 Build the index (once).** Skip this if the eight `CtarK1_index.*.ht2` files already exist in `00_Cxt_Indexed_Genome/hisatIndex/`. The script uses relative paths (`cd Cxt_Genome`), so submit it from the folder that contains a `Cxt_Genome/` folder with `CtarK1.fa` in it; the index is written to that same folder. If you saved the genome somewhere else, edit the `cd Cxt_Genome` and `hisat2-build` lines to match. Either way, the index must end up in `00_Cxt_Indexed_Genome/hisatIndex/`, which is where Step 2.2 looks for it.
 
 ```bash
 mkdir -p logs
@@ -328,9 +329,11 @@ Its `REP_MAP` must be identical to the one in the 4.2 script, so the heatmaps an
 
 ## Known issues and notes
 
-- **Input pairing is temporary.** Steps 3 and 4.0 use a Day 1 input control for every sample, including Day 3, because not every treatment replicate has a same-numbered input yet. Switch to replicate-matched inputs once all input replicates exist.
+- **Input pairing is being fixed.** Steps 3 and 4.0 used a Day 1 input control for every sample, including Day 3. Inputs must come from the same day as the sample (any three inputs from that day; replicate numbers need not match). The November 2026 rerun applies this; see `CUT-RUN/RERUN_2026-11.md`.
 - **Timed-out alignments.** A HISAT2 task that reaches its time limit leaves a truncated `.sam`; rerun that task before converting to BAM.
 - **Email address.** Every script has a `--mail-user` line. Change it to your own.
+- **The `@` in the Alpine path breaks HISAT2.** Activate `hisat2_env_fixed` through `/projects/.colostate.edu/<user>`, and escape the `@` in its `Config_heavy.pl` once after building it. Without both, `hisat2` exits with code 255 and logs `Global symbol "@colostate"`. The commands are in `CUT-RUN/RERUN_2026-11.md`.
+- **Build conda envs as a batch job.** `conda create` on the login node can hang for an hour on `/projects`. Run it with `sbatch --wrap` instead.
 
 ## How to use Slurm
 
@@ -368,7 +371,7 @@ Run `mkdir -p logs` before submitting.
 - **Assembly:** *Culex tarsalis* CtarK1 (Kern National Wildlife Refuge colony), Main et al. 2021, [Whole-genome assembly of *Culex tarsalis*](https://doi.org/10.1093/g3journal/jkaa063), G3 11(2):jkaa063. Genome and annotation files: <https://osf.io/mdwqx/>
 - **Annotation:** `Culex-tarsalis_knwr_BASEFEATURES_CtarK1.gff3`
 - **Derived files:** `genes_only.gff3`, `CtarK1_TSS.bed`, and `Culex-tarsalis_knwr_CtarK1.bed`, built with the steps in `Bed_file_instructions.txt` and `Gene_only_bed_instructions.txt`
-- The HISAT2 index is built in Step 2.1 and kept in `00_Cxt_Indexed_Genome/`
+- The HISAT2 index is built in Step 2.1 and kept in `00_Cxt_Indexed_Genome/hisatIndex/`
 - No Step 1 to 4 script reads the annotation directly. Step 4.1 reads only `CtarK1_TSS.bed`, expected at `Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS.bed`. Keep a copy of the three derived files in `/projects`, because scratch deletes them after 90 days. The RNA-seq steps use their own annotation, in the [Culex-RNA-Seq](https://github.com/yates13/Culex-RNA-Seq) repository.
 
 ## Data
@@ -378,6 +381,7 @@ Raw sequencing reads are not included in this repository. The raw FASTQs, named 
 ## Notes
 
 - Large outputs (BAMs, bigWigs, matrices) and the `logs/` folders are not tracked in this repo.
+- November 2026 rerun notes (changes, QC findings, the `@` fix): `CUT-RUN/RERUN_2026-11.md`
 - Contact: [Shawn / shawn.yates@colostate.edu]
 
 ## TODO
@@ -389,6 +393,7 @@ Raw sequencing reads are not included in this repository. The raw FASTQs, named 
 - [x] Remove the HOMER step (not part of this analysis)
 - [x] Document the `Cxt_Genome` path in `02.1` (it follows where the genome is saved)
 - [x] Move the conda environment specs to Alpine_Conda_Envs
-- [x] Confirm which environment the Step 2 scripts use (`rnaPseudo_clean2`)
+- [x] Confirm which environment the Step 2 scripts use (`hisat2_env_fixed`; `rnaPseudo_clean2` has no HISAT2, samtools or MultiQC)
+- [ ] Add the `multiqc_env` and `hisat2_env_fixed` specs, and the `Config_heavy.pl` fix, to Alpine_Conda_Envs
 - [x] Back up pipeline results and raw reads off scratch
 - [x] Use one `--mail-user` address across all scripts
