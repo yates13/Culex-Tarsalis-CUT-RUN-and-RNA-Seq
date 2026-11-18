@@ -34,6 +34,7 @@ export GTF="$SCRATCH/RNA_Seq/Genome/GTF/Culex-tarsalis_knwr_BASEFEATURES_CtarK1.
 export PIPE="$SCRATCH/Cxt_Cut_Run_Pipeline"
 export REPO="$PIPE/Culex-Tarsalis-CUT-RUN-and-RNA-Seq"   # VERIFY: location of the git clone
 export RAW_DIR="$SCRATCH/Cxt_Cut_Run_Raw_Files"
+export MERGED_RAW="$RAW_DIR/00_Merged_Raw"            # step 1.0.1 output, fastp input
 export GENOME_DIR="$PIPE/00_Cxt_Genome"
 export HISAT2_INDEX_DIR="$PIPE/00_Cxt_Indexed_Genome"
 export ROUND="$PIPE/Round1_Round2_With_Duplicates"

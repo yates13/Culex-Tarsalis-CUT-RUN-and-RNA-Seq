@@ -27,7 +27,7 @@
 # BEFORE SUBMITTING (run from the folder you submit from):
 #   1. mkdir -p logs
 #   2. Make the R1 file list. Task N processes line N of this file:
-#        cd /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Raw_Files
+#        cd /scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Raw_Files/00_Merged_Raw
 #        ls *R1_001.fastq.gz | sort > r1_file_list.txt
 #        wc -l r1_file_list.txt        # <- this number is your array size
 #
@@ -55,7 +55,7 @@ SCRATCH=/scratch/alpine/.colostate.edu/c832500103
 PIPE=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates
 
 # Directory containing your FASTQ files
-INDIR="${SCRATCH}/Cxt_Cut_Run_Raw_Files"
+INDIR="${SCRATCH}/Cxt_Cut_Run_Raw_Files/00_Merged_Raw"   # merged + md5-checked raw reads (steps 1.0.1, 1.0.2)
 OUTDIR="${PIPE}/01_Cxt_FastP/01.1_Cxt_fastp_out"
 R1_LIST="${INDIR}/r1_file_list.txt"
 

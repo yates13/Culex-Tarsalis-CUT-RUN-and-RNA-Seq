@@ -93,6 +93,7 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 
 | Scripts | Submit from |
 |---------|-------------|
+| `01.0.1`, `01.0.2` (run with `bash`, not `sbatch`) | anywhere; they `cd` to the raw folder themselves, and 01.0.2 writes its logs to `00_Merged_Raw/logs` |
 | `01.1_fastp_Cxt.sh`, `01.2_multiqc_fastp.sh` | `$P/01_Cxt_FastP` |
 | `02.2`, `02.2.5` (`MultiQC.sh`), `02.3`, `02.4` | `$P/02_Cxt_Alignment` |
 | `03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh` | `$P/03_MACS2_Peaks_New_Peaks` |
@@ -108,14 +109,38 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 
 | Script | What it does | Environment |
 |--------|--------------|-------------|
+| `01.0.1_Merge_Sequencing_Rounds.sh` | Collects the raw reads from the three sequencing-round folders into one flat folder, `00_Merged_Raw`, as symlinks. A sample sequenced in more than one round uses only the latest round's copy, with R1, R2 and both `.md5` files taken from the same round. | none |
+| `01.0.2_Md5sum_Check.sh` | Checks every raw FASTQ in `00_Merged_Raw` against its `.md5`, one file per SLURM array task. | none |
 | `01.1_fastp_Cxt.sh` | Trims paired-end reads with fastp, one sample per SLURM array task. fastp also writes a QC report per sample. | `fastp_env` |
 | `01.1_fix_sample_names.sh` | Renames `*_Cxt_R{1,2}_trimmed.fastq.gz` to `*-Cxt_R{1,2}_trimmed.fastq.gz` so sample names are consistent. | none |
 | `01.2_multiqc_fastp.sh` | Combines the per-sample fastp reports into one MultiQC report. | `rnaPseudo_clean2` |
 
-**1. Trim reads.** Build the R1 list in the raw FASTQ folder. Its line count is the array size:
+**0.1. Merge the sequencing rounds.** The raw reads came in three deliveries inside `Cxt_Cut_Run_Raw_Files`, each nested differently (`First_Round_Sequencing/CutRun_DNA_Rd1_30-1326595428/00_fastq/`, `Second_Round_Sequencing/CutRun_DNA_Rd2_30-1352505226/`, `Third_Round_Sequencing/CutRun_MP12_30-1360459436/`). Three samples (MP-ME-D3-R1, R2 and R3) were sequenced in both rounds 2 and 3. The latest round always wins, so they use the round 3 copy. The script links one copy of every sample into `Cxt_Cut_Run_Raw_Files/00_Merged_Raw` (96 samples, 192 FASTQs) and writes `merge_manifest.tsv` there, listing the round each sample came from and any older copy ignored. The round folders are not changed. It takes seconds, so run it on the login node:
 
 ```bash
-cd <raw_fastq_dir>
+bash <path_to_repo>/CUT-RUN/01_Cxt_FastP/01.0.1_Merge_Sequencing_Rounds.sh
+```
+
+It lists every problem it finds (a missing mate, a missing `.md5`) and exits with an error if there are any. Rerunning it replaces the old links. In our data the only problem is `MP-AC-D3-R1-Cxt_R2_001.fastq.gz`, which arrived without a `.md5`, so check it with `gzip -t` instead (its R1 mate passes its checksum).
+
+**0.2. Verify checksums.** The script builds its own file list (`00_Merged_Raw/md5_file_list.txt`) and submits itself with the matching array size, so there is no list to make and no `--array` to edit. Run it with `bash`, not `sbatch`:
+
+```bash
+bash <path_to_repo>/CUT-RUN/01_Cxt_FastP/01.0.2_Md5sum_Check.sh
+```
+
+When the job finishes, every line of `00_Merged_Raw/md5_results.tsv` should read `OK` (191 OK and 1 `MISSING_MD5` in our data), with as many lines as `md5_file_list.txt`:
+
+```bash
+cd <raw_fastq_dir>/00_Merged_Raw
+cut -f1 md5_results.tsv | sort | uniq -c
+grep -v '^OK' md5_results.tsv
+```
+
+**1. Trim reads.** Build the R1 list in the merged raw folder (`00_Merged_Raw`). Its line count is the array size:
+
+```bash
+cd <raw_fastq_dir>/00_Merged_Raw
 ls *R1_001.fastq.gz | sort > r1_file_list.txt
 N=$(wc -l < r1_file_list.txt)
 ```
@@ -348,7 +373,7 @@ Run `mkdir -p logs` before submitting.
 
 ## Data
 
-Raw sequencing reads are not included in this repository. Step 1 expects the raw FASTQs, named `<sample>_R1_001.fastq.gz` and `<sample>_R2_001.fastq.gz`, together in one folder (`Cxt_Cut_Run_Raw_Files` in our runs), with the array sized to the number of R1 files (96 in our run). Scratch deletes files after 90 days, so restore the full set from your backup before rerunning Step 1.
+Raw sequencing reads are not included in this repository. The raw FASTQs, named `<sample>_R1_001.fastq.gz` and `<sample>_R2_001.fastq.gz` with a `.md5` beside each, sit in three sequencing-round folders inside `Cxt_Cut_Run_Raw_Files`. Step 1.0.1 links them into one folder, `00_Merged_Raw`, and fastp reads from there, with the array sized to the number of R1 files (96 in our run). Scratch deletes files after 90 days, so restore the full set from your backup before rerunning Step 1.
 
 ## Notes
 
