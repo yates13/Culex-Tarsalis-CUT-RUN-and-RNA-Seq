@@ -26,7 +26,7 @@
 #            Cxt-CUTRUN-Pipeline-QC-fastp--HISAT2_multiqc_report.html
 #            Cxt-CUTRUN-Pipeline-QC-fastp--HISAT2_multiqc_report_data/
 #          Open the .html file in a browser (download it from Alpine first).
-# ENV:     rnaPseudo_clean2 (MultiQC)
+# ENV:     multiqc_env (MultiQC)
 # RESOURCES: 1 CPU, 16 GB, 1 h
 #
 # DIRECTORIES
@@ -73,7 +73,7 @@
 # ----------------------------
 PROJ=/projects/c832500103@colostate.edu
 source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
-conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/multiqc_env || { echo "ERROR: conda activate multiqc_env failed" >&2; exit 1; }
 
 # ----------------------------
 # Paths (not used by the command below)

@@ -23,7 +23,7 @@
 #            <sample>.sam            (alignments)
 #            <sample>.hisat2.log     (HISAT2 alignment summary)
 # INDEX:   00_Cxt_Indexed_Genome/CtarK1_index (built by 02.1_runBuildCtark1Genome_alpine.sh)
-# ENV:     rnaPseudo_clean2
+# ENV:     hisat2_env_fixed
 # RESOURCES per task: 4 CPUs, 16 GB, 4 h
 # HISAT2 flags: --no-spliced-alignment (CUT&RUN is genomic, not RNA),
 #               --no-mixed (only pairs where both mates align), --mm (memory-mapped index)
@@ -66,9 +66,9 @@ echo "[$0] Job: $SLURM_JOB_NAME | Task ID: $SLURM_ARRAY_TASK_ID"
 module purge
 
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-PROJ=/projects/c832500103@colostate.edu
+PROJ=/projects/.colostate.edu/c832500103   # no "@": Perl in hisat2 breaks on it
 source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
-conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/hisat2_env_fixed || { echo "ERROR: conda activate hisat2_env_fixed failed" >&2; exit 1; }
 
 # Stop on errors (after conda activation, which does not play well with set -e)
 set -eo pipefail
@@ -80,7 +80,7 @@ date
 # ----------------------------
 FASTQ_DIR=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/01_Cxt_FastP/01.1_Cxt_fastp_out
 OUT_DIR=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2_Cxt_HisatAligned_Cleaned
-INDEX=${SCRATCH}/Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/CtarK1_index
+INDEX=${SCRATCH}/Cxt_Cut_Run_Pipeline/00_Cxt_Indexed_Genome/hisatIndex/CtarK1_index
 filename=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/FastqTrimmed.txt
 mkdir -p $OUT_DIR
 mkdir -p ${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/slurm_logs

@@ -22,7 +22,7 @@
 #            <sample>.bam            (sorted)
 #            <sample>.bam.bai        (index)
 #            <sample>_flagstat.txt   (alignment stats from samtools flagstat)
-# ENV:     rnaPseudo_clean2 (samtools)
+# ENV:     hisat2_env_fixed (samtools)
 # RESOURCES per task: 8 CPUs, 32 GB, 3 h
 #
 # BEFORE SUBMITTING (run from 02_Cxt_Alignment):
@@ -65,9 +65,9 @@
 # ----------------------------
 module purge
 SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-PROJ=/projects/c832500103@colostate.edu
+PROJ=/projects/.colostate.edu/c832500103   # no "@": Perl in hisat2 breaks on it
 source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
-conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/hisat2_env_fixed || { echo "ERROR: conda activate hisat2_env_fixed failed" >&2; exit 1; }
 date
 nthreads=$SLURM_CPUS_PER_TASK
 

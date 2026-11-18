@@ -23,7 +23,7 @@
 ################################################################################
 
 #SCRATCH=/scratch/alpine/.colostate.edu/c832500103
-PROJ=/projects/c832500103@colostate.edu
+PROJ=/projects/.colostate.edu/c832500103   # no "@": Perl in hisat2 breaks on it
 module purge
 
 # Load conda
@@ -31,7 +31,7 @@ module purge
 #conda activate ${SCRATCH}/conda_envs/rnaPseudo_clean || { echo "ERROR: conda activate rnaPseudo_clean failed" >&2; exit 1; }
 
 source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
-conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/hisat2_env_fixed || { echo "ERROR: conda activate hisat2_env_fixed failed" >&2; exit 1; }
 
 set -eo pipefail
 

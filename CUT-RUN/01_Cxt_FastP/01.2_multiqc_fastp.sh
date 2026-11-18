@@ -15,7 +15,7 @@
 #
 # INPUT:   the *_fastp.json files in 01.1_Cxt_fastp_out (from 01.1_fastp_Cxt.sh)
 # OUTPUT:  MultiQC report in 01.2_FastP_MultiQC/MultiQC_out
-# ENV:     rnaPseudo_clean2 (contains multiqc)
+# ENV:     multiqc_env (contains multiqc)
 #
 # Submit from the folder that holds a logs/ directory:
 #     mkdir -p logs
@@ -31,7 +31,7 @@ MQC_OUT=${PIPE}/01_Cxt_FastP/01.2_FastP_MultiQC/MultiQC_out
 
 PROJ=/projects/c832500103@colostate.edu
 source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
-conda activate ${PROJ}/conda_envs/rnaPseudo_clean2 || { echo "ERROR: conda activate rnaPseudo_clean2 failed" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/multiqc_env || { echo "ERROR: conda activate multiqc_env failed" >&2; exit 1; }
 
 set -eo pipefail
 
