@@ -126,7 +126,7 @@ fi
 
 if [[ $# -lt 1 ]]; then
     echo "ERROR: Missing title argument"
-    echo "USAGE: sbatch 04.7_All_Marks_By_Day_Heatmap.sh 'Base Title'"
+    echo "USAGE: sbatch 04.3_Heat_Maps.sh 'Base Title'"
     exit 1
 fi
 BASE_TITLE=$1
@@ -135,21 +135,21 @@ BASE_TITLE=$1
 # HEATMAP SETTINGS
 # ============================================================
 COLORMAP="RdBu"
-Z_MIN="auto"
-Z_MAX="auto"
+Z_MIN="-0.6"
+Z_MAX="0.6"
 REF_POINT_LABEL="TSS"
 WHAT_TO_SHOW="heatmap and colorbar"
 
 # ============================================================
 # Representative replicate for every MARK_TARGET_DAY combination
-# (identical to 04.6 — keep these two scripts in sync if you
+# (identical to 04.2_All_Marks_By_Day_Profile_HardCoded_Yaxis.sh — keep these two scripts in sync if you
 # update representative reps in one, update the other)
 # ============================================================
 declare -A REP_MAP=(
-    [BF_AC_D1]="R2"  [BF_AC_D3]="R4"  [BF_ME_D1]="R2"  [BF_ME_D3]="R3"  [BF_SR_D1]="R3"  [BF_SR_D3]="R2"
-    [MP_AC_D1]="R2"  [MP_AC_D3]="R1"  [MP_ME_D1]="R1"  [MP_ME_D3]="R1"  [MP_SR_D1]="R3"  [MP_SR_D3]="R3"
-    [ZH_AC_D1]="R3"  [ZH_AC_D3]="R3"  [ZH_ME_D1]="R3"  [ZH_ME_D3]="R3"  [ZH_SR_D1]="R1"  [ZH_SR_D3]="R3"
-    [SF_AC_D1]="R2"  [SF_AC_D3]="R3"  [SF_ME_D1]="R2"  [SF_ME_D3]="R3"  [SF_SR_D1]="R3"  [SF_SR_D3]="R2"
+    [BF_AC_D1]="R1"  [BF_AC_D3]="R4"  [BF_ME_D1]="R2"  [BF_ME_D3]="R2"  [BF_SR_D1]="R3"  [BF_SR_D3]="R2"
+    [MP_AC_D1]="R2"  [MP_AC_D3]="R3"  [MP_ME_D1]="R3"  [MP_ME_D3]="R1"  [MP_SR_D1]="R1"  [MP_SR_D3]="R3"
+    [ZH_AC_D1]="R2"  [ZH_AC_D3]="R1"  [ZH_ME_D1]="R3"  [ZH_ME_D3]="R3"  [ZH_SR_D1]="R1"  [ZH_SR_D3]="R3"
+    [SF_AC_D1]="R2"  [SF_AC_D3]="R3"  [SF_ME_D1]="R1"  [SF_ME_D3]="R3"  [SF_SR_D1]="R3"  [SF_SR_D3]="R2"
 )
 
 # ============================================================

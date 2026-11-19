@@ -32,7 +32,7 @@
 # WHAT EACH PLOT SHOWS
 #   For one target and day, every MP replicate is drawn as its own colored line
 #   around the TSS (-2 kb to +2 kb). TARGET: AC = H3K27ac, ME = H3K9me3,
-#   SR = SREBP. The y-axis is fixed (-0.3 to 0.8) so plots can be compared.
+#   SR = SREBP. The y-axis is fixed (-0.1 to 0.6) so plots can be compared.
 #
 # ONE OF FOUR SIBLING SCRIPTS
 #   04.2_BF_..., 04.2_MP_..., 04.2_SF_... and 04.2_ZH_Plot_profile_Individual_Bams_
@@ -75,9 +75,9 @@
 #
 # THINGS YOU MAY WANT TO EDIT
 #   COLOR_PALETTE   Line colors, used in order, one per replicate.
-#   --yMin/--yMax   Shared y-axis range (-0.3 to 0.8). Change if new data falls
+#   --yMin/--yMax   Shared y-axis range (-0.1 to 0.6). Change if new data falls
 #                   outside it. The representative-replicate profile script
-#                   (04.2_All_Marks_By_Day_...) uses -0.10 to 0.55 instead.
+#                   (04.2_All_Marks_By_Day_...) uses -0.1 to 0.35 instead.
 #   Targets/days    The "for TARGET" and "for DAY" loops.
 #
 # CHECKING THE RESULTS
@@ -175,8 +175,8 @@ for TARGET in AC ME SR; do
             --regionsLabel "" \
             -T "${TARGET} ${DAY} — MP Only" \
             -y "Input-subtracted signal (BPM)" \
-            --yMin -0.3 \
-            --yMax 0.8 \
+            --yMin -0.1 \
+            --yMax 0.6 \
             --plotHeight 8 \
             --plotWidth 12 \
             --dpi 300
