@@ -133,6 +133,7 @@ fi
 
 # Sort + index
 sorted="${mergedir}/${cond}-${repstring}-merged-sorted.bam"
+rm -f "${sorted}".tmp.*.bam   # leftovers from a killed run make samtools sort skip chunks and lose reads
 samtools sort -@$nthreads -o "$sorted" "$merged_base"
 samtools index "$sorted"
 
