@@ -61,15 +61,11 @@
 #        sbatch --array=1-72%10 00_Create_Bigwigs_Individual_Bams_ARRAY.sh   # at most 10 tasks at once
 #        sbatch --array=5,17 00_Create_Bigwigs_Individual_Bams_ARRAY.sh      # rerun only tasks 5 and 17
 #
-# HOW THE INPUT CONTROL IS CHOSEN (TEMPORARY)
-#   Each treatment BAM is compared against ANY Day 1 input BAM for the same
-#   TREATMENT (first match of <TREATMENT>-IN-D1-*-Cxt.bam), NOT the input with
-#   the same replicate number, because not every treatment replicate has a
-#   same-numbered input yet. Once all input replicates exist, switch to
-#   rep-matched pairing:
-#        rep=$(echo "$basename" | cut -d'-' -f4)
-#        input_bam="${BAM_INPUT_DIR}/${treatment}-IN-D1-${rep}-Cxt.bam"
-#   All days (D1 and D3) currently use a Day 1 input.
+# HOW THE INPUT CONTROL IS CHOSEN
+#   Same day, paired by position: the Nth replicate of a treatment/target/day
+#   (sorted R1, R2, ...) is compared with the Nth input replicate of the same
+#   treatment and day. R numbers need not match (D3 samples R1, R4, R5 get
+#   inputs R1, R2, R3). A D3 sample never uses a D1 input.
 #
 # RERUNNING
 #   Safe to resubmit. A sample is skipped if its .bw already exists. To redo a
@@ -152,7 +148,12 @@ treatment=$(echo "$basename" | cut -d'-' -f1)
 # not matched by replicate number - not every treatment rep has a same-numbered
 # input yet. Revisit once all input replicates exist and switch to exact
 # rep-matched pairing (see commented-out version below).
-input_bam=$(ls "${BAM_INPUT_DIR}/${treatment}-IN-D1-"*"-Cxt.bam" 2>/dev/null | head -1)
+# Same-day input, paired by position: the Nth replicate of this treatment/target/day
+# gets the Nth input replicate of that treatment and day (R numbers need not match).
+day=$(echo "$basename" | cut -d- -f3)
+target=$(echo "$basename" | cut -d- -f2)
+pos=$(ls "${BAM_INPUT_DIR}/${treatment}-${target}-${day}-"R*-Cxt.bam 2>/dev/null | xargs -rn1 basename | sort -V | grep -nxF "$(basename "$treatment_bam")" | cut -d: -f1)
+input_bam=$(ls "${BAM_INPUT_DIR}/${treatment}-IN-${day}-"R*-Cxt.bam 2>/dev/null | sort -V | sed -n "${pos:-999}p")
 # --- exact rep-matched version to swap back in later ---
 # rep=$(echo "$basename" | cut -d'-' -f4)
 # input_bam="${BAM_INPUT_DIR}/${treatment}-IN-D1-${rep}-Cxt.bam"

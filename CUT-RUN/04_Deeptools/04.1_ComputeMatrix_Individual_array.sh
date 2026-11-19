@@ -64,7 +64,7 @@
 #
 # MATRIX SETTINGS
 #   reference-point at TSS, 2000 bp before and after (-b 2000 -a 2000),
-#   --skipZeros (drops regions with no signal in any sample), -p 4.
+#   -p 4. No --skipZeros: cbind in 4.1.2 needs the same regions in every group.
 #
 # CHECKING THE RESULTS
 #   ls matrix_*.gz region_*.bed        # one of each per group
@@ -121,7 +121,6 @@ computeMatrix reference-point \
     -b 2000 -a 2000 \
     -R "$REFERENCE_BED" \
     -S $BIGWIGS \
-    --skipZeros \
     -o "matrix_${POP}.gz" \
     -p 4 \
     --outFileSortedRegions "region_${POP}.bed" \

@@ -91,5 +91,6 @@ multiqc \
     --ignore "logs/" \
     -o /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2.5_MultiQC_Hisat_aligned \
     -f \
+    --replace-names /scratch/alpine/.colostate.edu/c832500103/Cxt_Cut_Run_Pipeline/Culex-Tarsalis-CUT-RUN-and-RNA-Seq/CUT-RUN/02_Cxt_Alignment/02.2.5_MultiQC_Hisat_aligned/sample_rename.tsv \
     --title "Cxt CUT&RUN Pipeline QC - fastp + HISAT2"
 #-c multiqc_config.yaml

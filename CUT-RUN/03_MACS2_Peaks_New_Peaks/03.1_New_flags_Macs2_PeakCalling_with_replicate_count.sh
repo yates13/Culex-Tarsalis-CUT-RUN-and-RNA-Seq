@@ -29,8 +29,8 @@
 #   - Input controls (names containing "-IN-") are skipped as samples.
 #   - ME samples (H3K9me3, broad domains) are called with --broad.
 #     AC and SR samples use MACS2's default narrow peak calling.
-#   - Each sample is compared against the input control matching its TREATMENT:
-#       <TREATMENT>-IN-D1*-merged-sorted.bam  (first match is used)
+#   - Each sample is compared against the input control matching its TREATMENT and DAY:
+#       <TREATMENT>-IN-<DAY>-*-merged-sorted.bam  (same day as the sample)
 #     If no input is found, the sample is skipped with a message.
 #   - Samples with no "rep<digits>" in the name are reported as an error and skipped.
 #
@@ -115,10 +115,11 @@ for BAM in ${BAMDIR}/*-merged-sorted.bam; do
     fi
 
     # Find matching input control
-    INPUT_BAM=$(ls ${BAMDIR}/${TREATMENT}-IN-D1*-merged-sorted.bam 2>/dev/null | head -1 || true)
+    DAY=$(echo "$SAMPLE" | cut -d- -f3)   # same-day input: D3 samples use the D3 input
+    INPUT_BAM=$(ls ${BAMDIR}/${TREATMENT}-IN-${DAY}-*-merged-sorted.bam 2>/dev/null | head -1 || true)
 
     if [[ -z "$INPUT_BAM" ]]; then
-        echo "[$count/$total] SKIP: $SAMPLE (no input control for $TREATMENT)"
+        echo "[$count/$total] SKIP: $SAMPLE (no $DAY input control for $TREATMENT)"
         continue
     fi
 
@@ -129,7 +130,7 @@ for BAM in ${BAMDIR}/*-merged-sorted.bam; do
     PEAK_DIR="${PEAK_OUT}/${SAMPLE}"
     mkdir -p ${PEAK_DIR}
 
-    echo "[$count/$total] $SAMPLE (Target: $TARGET)"
+    echo "[$count/$total] $SAMPLE (Target: $TARGET, Input: $INPUT_NAME)"
 
     # ----------------------------
     # Choose peak type by target
