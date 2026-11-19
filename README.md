@@ -126,12 +126,32 @@ With `P` set to the pipeline output folder (`.../Round1_Round2_With_Duplicates`)
 | Scripts | Submit from |
 |---------|-------------|
 | `01.0.1`, `01.0.2` (run with `bash`, not `sbatch`) | anywhere; they `cd` to the raw folder themselves, and 01.0.2 writes its logs to `00_Merged_Raw/logs` |
+| QC scripts (`0*_QC_*.sh`, see Quality control) | the folder of the step they check, for example `$P/02_Cxt_Alignment` for `02.3.5_QC_align.sh` |
 | `01.1_fastp_Cxt.sh`, `01.2_multiqc_fastp.sh` | `$P/01_Cxt_FastP` |
 | `02.2`, `02.2.5` (`MultiQC.sh`), `02.3`, `02.4` | `$P/02_Cxt_Alignment` |
 | `03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh` | `$P/03_MACS2_Peaks_New_Peaks` |
 | `04.0`, `04.1`, `04.1.2`, `04.2_BF/MP/SF/ZH_...`, `04.3_HeatMap_Individual_Bams_By_Treatment_updated.sh` | `$P/04_Deeptools` (it needs `bw_chunks/` and writes `matrix_*.gz` and `region_*.bed` there) |
 | `04.2_All_Marks_By_Day_Profile_HardCoded_Yaxis.sh` | `$P/04_Deeptools/04.2_Representative_Replicates` |
 | `04.3_Heat_Maps.sh` | `$P/04_Deeptools/04.3_Representative_Replicates_heat_maps` |
+
+## Quality control
+
+Each step has a QC script that runs after it. All of them load `CUT-RUN/QC/qc_lib.sh` (shared paths and checks) and write two files to `QC/` in the pipeline output folder: `<step>_qc.tsv` (one row per sample or condition) and `<step>_summary.txt` (PASS, WARN and FAIL lines).
+
+- **FAIL**: something is missing, broken, or paired with the wrong day. The script exits with an error, so any job queued behind it with `--dependency=afterok` is cancelled instead of running on bad input.
+- **WARN**: an outlier worth a look (below 25% of its group median, or a HISAT2 alignment rate below 20%). The script exits normally.
+
+| QC script | Run after | Checks | Run with |
+|---|---|---|---|
+| `01_Cxt_FastP/01.0.3_QC_raw.sh` | 0.2 (checksums) | 2 FASTQs per sample; no checksum failures (WARN: file with no `.md5`) | `bash` |
+| `01_Cxt_FastP/01.1.5_QC_fastp.sh` | 1 and 2 (trimming, renaming) | trimmed pair and fastp report for every sample (WARN: low read count) | `bash` |
+| `02_Cxt_Alignment/02.3.5_QC_align.sh` | 2.3 | HISAT2 log complete; BAM passes `samtools quickcheck` and is indexed (WARN: alignment rate below 20%) | `sbatch` |
+| `02_Cxt_Alignment/02.4.5_QC_merge.sh` | 2.4, before Step 3 | one merged BAM per condition; replicate tag matches the BAMs on disk; merged reads equal the sum of the replicates | `sbatch` |
+| `03_MACS2_Peaks_New_Peaks/03.2_QC_peaks.sh` | Step 3 | peaks for every condition; the control MACS2 recorded is from the same day (WARN: few peaks) | `bash` |
+| `04_Deeptools/04.0.5_QC_bigwig.sh` | 4.0 | one non-empty bigWig per treatment BAM; each used an input from the same day | `bash` |
+| `04_Deeptools/04.0.6_QC_tss.sh` | building `CtarK1_TSS.bed`, before 4.1 | TSS rows are 1 bp with a strand; every TSS contig is in the BAM header | `sbatch` |
+
+Run each from the folder of its step (it needs a `logs/` folder there) and read the result with `cat <P>/QC/<step>_summary.txt`. To stop a bad step from feeding the next one, queue the next step behind the QC check, for example `J=$(sbatch --parsable 02.4.5_QC_merge.sh)`, then `sbatch --dependency=afterok:$J 03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh`.
 
 ## Step details
 
@@ -169,6 +189,8 @@ cut -f1 md5_results.tsv | sort | uniq -c
 grep -v '^OK' md5_results.tsv
 ```
 
+**QC.** Then run `bash <path_to_repo>/CUT-RUN/01_Cxt_FastP/01.0.3_QC_raw.sh` from `01_Cxt_FastP`. It checks the FASTQ count and the checksum results, and warns about any file with no `.md5`.
+
 **1. Trim reads.** Build the R1 list in the merged raw folder (`00_Merged_Raw`). Its line count is the array size:
 
 ```bash
@@ -194,6 +216,8 @@ bash <path_to_repo>/CUT-RUN/01_Cxt_FastP/01.1_fix_sample_names.sh
 ```
 
 Only the trimmed FASTQ files are renamed. The `.html` and `.json` reports keep their original names.
+
+**QC.** After renaming, run `bash <path_to_repo>/CUT-RUN/01_Cxt_FastP/01.1.5_QC_fastp.sh` from `01_Cxt_FastP`. It checks that every sample has its trimmed pair and fastp report, and warns about samples with less than 25% of the median read count for their target.
 
 **3. Summarize QC.**
 
@@ -258,6 +282,8 @@ sbatch --array=1-${N} 02.3_runBam_array.sh
 
 Check with `ls <outdir>/*.bam | wc -l` (should equal N) and `sacct`. A task fails if samtools hits a truncated SAM, so rerun Step 2.2 for that sample first. Once every BAM is confirmed good, the SAM files can be deleted to free scratch space.
 
+**2.3.5 QC.** After 2.3, run `sbatch <path_to_repo>/CUT-RUN/02_Cxt_Alignment/02.3.5_QC_align.sh` from `02_Cxt_Alignment`. It checks every HISAT2 log for a final alignment rate and every BAM with `samtools quickcheck` and for an index, and warns about alignment rates below 20%.
+
 **2.4 Merge replicates.** The array size is the number of conditions, not samples. Build the conditions list, then submit with that size:
 
 ```bash
@@ -269,6 +295,8 @@ sbatch --array=1-$(wc -l < ${mergedir}/conditions.txt) 02.4_BamMerge_With_replic
 ```
 
 BAM names must follow `<condition>-R<n>-Cxt.bam`. Outputs per condition: `<condition>-rep<digits>-merged-sorted.bam` and its `.bai`. The unsorted `-merged.bam` intermediates can be deleted.
+
+**2.4.5 QC.** After 2.4, run `sbatch <path_to_repo>/CUT-RUN/02_Cxt_Alignment/02.4.5_QC_merge.sh` from `02_Cxt_Alignment`, and queue Step 3 behind it. It checks that every condition has a merged BAM, that the replicate tag in its name matches the replicate BAMs on disk, and that the merged read count equals the sum of the replicates. A 2.4 task killed during sorting leaves `*.tmp.NNNN.bam` files; a rerun then cannot create its own temporary files, skips them and loses reads without failing. The 2.4 script now deletes these files before sorting, and this check catches any read loss.
 
 ### Step 3: Peak calling (`CUT-RUN/03_MACS2_Peaks_New_Peaks`)
 
@@ -282,15 +310,17 @@ sbatch 03.1_New_flags_Macs2_PeakCalling_with_replicate_count.sh
 - Input controls (names containing `-IN-`) are skipped as samples.
 - ME (H3K9me3) samples are called with `--broad`. AC and SR samples use MACS2's default narrow peak calling.
 - BAMs are treated as paired-end (`-f BAMPE`), duplicates are kept (`--keep-dup all`), and the effective genome size is 800,000,000.
-- Each sample is compared against the first `<TREATMENT>-IN-D1*-merged-sorted.bam`. All days (D1 and D3) therefore use a Day 1 input control.
+- Each sample is compared against the merged input of the same treatment and day, `<TREATMENT>-IN-<DAY>-rep*-merged-sorted.bam`, so Day 3 samples use the Day 3 input. The job log prints the input used for each sample.
 - Output goes to `03.1_MacsPeaks_with_replicate_count/<sample>/`, with the MACS2 messages for all samples appended to `macs2.log`. Rerunning redoes every sample and overwrites its outputs.
 - Samples with no input control, or no `rep<digits>` in the name, are reported and skipped. The job stops if MACS2 itself fails.
+
+**3.2 QC.** After MACS2, run `bash <path_to_repo>/CUT-RUN/03_MACS2_Peaks_New_Peaks/03.2_QC_peaks.sh` from `03_MACS2_Peaks_New_Peaks`. It checks that every condition has a peak file with peaks, and reads the control file MACS2 recorded in each `_peaks.xls` to confirm it is from the same day as the sample. It warns about conditions with less than 25% of the median peak count for their target.
 
 ### Step 4: deepTools (`CUT-RUN/04_Deeptools`)
 
 Environment for all Step 4 scripts: `deeptools_kernel_v2`. Submit from `04_Deeptools`, except the two representative-replicate scripts (4.2 and 4.3 below), which are submitted from their own subfolders.
 
-**4.0 Input-subtracted bigWigs** (`00_Create_Bigwigs_Individual_Bams_ARRAY.sh`). One BAM per array task; each treatment BAM from Step 2.3 is compared with a Day 1 input BAM of the same treatment using `bamCompare` (subtract, BPM-normalized):
+**4.0 Input-subtracted bigWigs** (`00_Create_Bigwigs_Individual_Bams_ARRAY.sh`). One BAM per array task; each treatment BAM from Step 2.3 is compared with an input BAM from the same treatment and day using `bamCompare` (subtract, BPM-normalized). Inputs are paired by position: the Nth replicate of a treatment, target and day gets the Nth input replicate of that treatment and day, so replicate numbers need not match (BF-AC-D3 R1, R4, R5 get inputs R1, R2, R3):
 
 ```bash
 mkdir -p logs
@@ -299,6 +329,8 @@ sbatch --array=1-$(wc -l < treatment_bam_list.txt) 00_Create_Bigwigs_Individual_
 ```
 
 Output: `<sample>_inputsubtracted.bw` in `00_BigWig_Files_Individual_Bams/`. Finished samples are skipped on resubmission.
+
+**4.0.5 and 4.0.6 QC.** After 4.0, run `bash <path_to_repo>/CUT-RUN/04_Deeptools/04.0.5_QC_bigwig.sh` from `04_Deeptools`. It checks for one non-empty bigWig per treatment BAM and reads the newest bigWig logs to confirm each one used an input from the same day. Before 4.1, run `sbatch <path_to_repo>/CUT-RUN/04_Deeptools/04.0.6_QC_tss.sh` and queue 4.1 behind it. It checks that `CtarK1_TSS.bed` has 1 bp rows with a strand and that every contig name in it is in the BAM header; if the names did not match, every plot would come out flat without an error.
 
 **4.1 Signal matrices** (`04.1_ComputeMatrix_Individual_array.sh`). One group (BF, MP, SF, ZH) per array task, TSS -2 kb to +2 kb. It reads the bigWigs listed in `bw_chunks/chunk_<GROUP>.txt` and the `CtarK1_TSS.bed` regions, and writes `matrix_<GROUP>.gz` and `region_<GROUP>.bed`:
 
@@ -360,7 +392,7 @@ Its `REP_MAP` must be identical to the one in the 4.2 script, so the heatmaps an
 
 ## Known issues and notes
 
-- **Input pairing is being fixed.** Steps 3 and 4.0 used a Day 1 input control for every sample, including Day 3. Inputs must come from the same day as the sample (any three inputs from that day; replicate numbers need not match). The November 2026 rerun applies this; see `CUT-RUN/RERUN_2026-11.md`.
+- **Input pairing (fixed November 2026).** Steps 3 and 4.0 used a Day 1 input control for every sample, including Day 3. Inputs must come from the same day as the sample (any three inputs from that day; replicate numbers need not match). The November 2026 rerun applies this; see `CUT-RUN/RERUN_2026-11.md`.
 - **Timed-out alignments.** A HISAT2 task that reaches its time limit leaves a truncated `.sam`; rerun that task before converting to BAM.
 - **Email address.** Every script has a `--mail-user` line. Change it to your own.
 - **The `@` in the Alpine path breaks HISAT2.** Activate `hisat2_env_fixed` through `/projects/.colostate.edu/<user>`, and escape the `@` in its `Config_heavy.pl` once after building it. Without both, `hisat2` exits with code 255 and logs `Global symbol "@colostate"`. The commands are in `CUT-RUN/RERUN_2026-11.md`.
@@ -388,7 +420,7 @@ Raw sequencing reads are not included in this repository. The raw FASTQs, named 
 
 - [ ] Add the R scripts (including `Gvis_Function`) to the repo and document how to run them
 - [ ] Rebuild the lost conda environments (`fastp_env`, `macs2_env`, `deeptools_kernel_v2`) in `/projects` from the specs in [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs) and confirm they work with `bash scripts/verify_envs.sh`
-- [ ] Switch Steps 3 and 4.0 to replicate-matched input controls when all input replicates exist
+- [x] Switch Steps 3 and 4.0 to same-day input controls (November 2026)
 - [x] Finish updating the scripts through Step 4, including the representative-replicate scripts
 - [x] Remove the HOMER step (not part of this analysis)
 - [x] Document the `Cxt_Genome` path in `02.1` (it follows where the genome is saved)
