@@ -16,7 +16,7 @@
 ################################################################################
 # STEP 2.4: Merge replicate BAMs for each condition (one condition per array task)
 #
-# INPUT:   <condition>-R<n>-Cxt.bam files from Step 2.3 (02.3_Cxt_BamConverted)
+# INPUT:   <condition>-R<n>-Cxt.bam files from Step 2.3.1 (02.3.1_Cxt_BamFiltered)
 #            e.g. <condition>-R1-Cxt.bam, <condition>-R2-Cxt.bam
 #          conditions.txt = one condition name per line (built below)
 # OUTPUT:  in 02.4_Cxt_BamMerged_with_replicate_count, per condition:
@@ -33,7 +33,7 @@
 #   range. Two steps:
 #
 #   1. Build the conditions list (one line per condition, replicate suffix removed):
-#        bamdir=<path>/02.3_Cxt_BamConverted
+#        bamdir=<path>/02.3.1_Cxt_BamFiltered
 #        mergedir=<path>/02.4_Cxt_BamMerged_with_replicate_count
 #        mkdir -p $mergedir
 #        ls ${bamdir}/*.bam | xargs -n1 basename | sed 's/-R[0-9]-Cxt\.bam//' \
@@ -85,7 +85,7 @@ set -euo pipefail
 # Define directories
 # -----------------------------
 samdir=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.2_Cxt_HisatAligned_Cleaned
-bamdir=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.3_Cxt_BamConverted
+bamdir=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.3.1_Cxt_BamFiltered   # filtered BAMs from Step 2.3.1
 mergedir=${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.4_Cxt_BamMerged_with_replicate_count
 mkdir -p $mergedir
 

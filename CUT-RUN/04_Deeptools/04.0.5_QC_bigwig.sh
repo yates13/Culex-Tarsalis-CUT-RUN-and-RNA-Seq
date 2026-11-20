@@ -12,7 +12,7 @@
 
 ################################################################################
 # QC for Step 4.0 (bigWigs). Run after 00_Create_Bigwigs_Individual_Bams_ARRAY.sh, before 4.1.
-# Checks: a non-empty bigWig per treatment BAM; no input bigWigs; the input used (from the newest run logs) is from the SAME DAY.
+# Checks: a non-empty bigWig per treatment BAM; no input bigWigs; the input used (from the newest run logs) is the pooled input from the SAME DAY.
 # Output: QC/bigwig_qc.tsv and QC/bigwig_summary.txt in Round1_Round2_With_Duplicates.
 # FAIL exits 1 (cancels anything queued behind it with afterok); WARN exits 0.
 #
@@ -36,6 +36,7 @@ for s in $(samples | grep -v -- '-IN-'); do
     iday=$(echo "$inp" | cut -d- -f3)
     printf '%s\t%s\t%s\t%s\t%s\n' "$b" "$day" "${inp:-NA}" "${iday:-NA}" "$mb" >> "$TSV"
     [[ -z "$inp" || "$iday" == "$day" ]] || fail "$b ($day) was normalized with $inp ($iday)"
+    [[ -z "$inp" || "$inp" == *-merged-sorted.bam ]] || fail "$b: input $inp is one replicate, not the pooled same-day input"
 done
 n=$(($(wc -l < "$TSV")-1)); [[ $n -eq $(samples | grep -vc -- '-IN-') ]] && pass "$n bigWigs present and non-empty"
 [[ -n "$jid" ]] && [[ $(awk -F'\t' 'NR>1 && $2!=$4' "$TSV" | wc -l) -eq 0 ]] && pass "every bigWig used an input from the same day (job $jid)"

@@ -35,7 +35,7 @@ for c in $conds; do
     want="rep$(samples | grep "^${c}-R" | sed -E 's/.*-R([0-9]+)-Cxt$/\1/' | sort -n | tr -d '\n')"
     [[ "$tag" == "$want" ]] || fail "$c: merged as $tag, but the replicates on disk are $want"
     mr=$(samtools idxstats "$m" | awk '{s+=$3}END{print s+0}')
-    rr=0; for b in "$BAMDIR/${c}"-R*-Cxt.bam; do rr=$((rr + $(samtools idxstats "$b" | awk '{s+=$3}END{print s+0}'))); done
+    rr=0; for b in "$FILTDIR/${c}"-R*-Cxt.bam; do rr=$((rr + $(samtools idxstats "$b" | awk '{s+=$3}END{print s+0}'))); done
     printf '%s\t%s\t%s\t%s\n' "$c" "$tag" "$mr" "$rr" >> "$TSV"
     [[ $mr -eq $rr ]] || fail "$c: merged BAM has $mr mapped reads, replicates add up to $rr"
 done

@@ -43,6 +43,7 @@ export FASTP_DIR="$ROUND/01_Cxt_FastP"
 export FASTP_OUT="$FASTP_DIR/01.1_Cxt_fastp_out"
 export FASTP_MULTIQC="$FASTP_DIR/01.2_FastP_MultiQC/MultiQC_out"
 export ALIGN_DIR="$ROUND/02_Cxt_Alignment"
+export BAM_FILT_DIR="$ALIGN_DIR/02.3.1_Cxt_BamFiltered"   # Step 2.3.1: filtered BAMs, used by 2.4 and 4.0
 export PEAKS_DIR="$ROUND/03_MACS2_Peaks_New_Peaks"
 export DEEPTOOLS_DIR="$ROUND/04_Deeptools"
 export HOMER_DIR="$ROUND/05_HomerAnnotation"

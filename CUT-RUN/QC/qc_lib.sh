@@ -22,6 +22,7 @@ RAW=${SCRATCH}/Cxt_Cut_Run_Raw_Files/00_Merged_Raw
 FASTP=${PIPE}/01_Cxt_FastP/01.1_Cxt_fastp_out
 SAMDIR=${PIPE}/02_Cxt_Alignment/02.2_Cxt_HisatAligned_Cleaned
 BAMDIR=${PIPE}/02_Cxt_Alignment/02.3_Cxt_BamConverted
+FILTDIR=${PIPE}/02_Cxt_Alignment/02.3.1_Cxt_BamFiltered   # Step 2.3.1 output (MAPQ>=10, primary, proper pairs)
 MERGED=${PIPE}/02_Cxt_Alignment/02.4_Cxt_BamMerged_with_replicate_count
 LIST=${PIPE}/02_Cxt_Alignment/FastqTrimmed.txt
 D4=${PIPE}/04_Deeptools
