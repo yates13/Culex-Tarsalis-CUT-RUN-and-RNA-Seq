@@ -16,8 +16,8 @@
 ################################################################################
 # STEP 4.0: Make input-subtracted bigWigs from individual BAMs (one BAM per array task)
 #
-# INPUT:   <TREATMENT>-<TARGET>-<DAY>-R<n>-Cxt.bam files from Step 2.3.1
-#            (02.3.1_Cxt_BamFiltered), e.g. ZH-AC-D1-R1-Cxt.bam
+# INPUT:   <TREATMENT>-<TARGET>-<DAY>-R<n>-Cxt.bam files from Step 2.3
+#            (02.3_Cxt_BamConverted), e.g. ZH-AC-D1-R1-Cxt.bam
 #          treatment_bam_list.txt = full paths of the treatment BAMs, one per line
 #            (input controls, names containing "-IN-", are NOT in this list)
 # OUTPUT:  in 00_BigWig_Files_Individual_Bams, per sample:
@@ -27,7 +27,7 @@
 # RESOURCES per task: 8 CPUs, 32 GB, 5 h
 #
 # DIRECTORIES
-#   BAM_INPUT_DIR = <path>/02_Cxt_Alignment/02.3.1_Cxt_BamFiltered
+#   BAM_INPUT_DIR = <path>/02_Cxt_Alignment/02.3_Cxt_BamConverted
 #                   Input. Must contain the sorted, indexed BAMs (.bam + .bai),
 #                   including the input controls (-IN-).
 #   BW_OUTPUT_DIR = <path>/04_Deeptools/00_BigWig_Files_Individual_Bams
@@ -61,6 +61,140 @@
 #        sbatch --array=1-72%10 00_Create_Bigwigs_Individual_Bams_ARRAY.sh   # at most 10 tasks at once
 #        sbatch --array=5,17 00_Create_Bigwigs_Individual_Bams_ARRAY.sh      # rerun only tasks 5 and 17
 #
-# Input = all input replicates of this site and day, pooled (merged input BAM from Step 2.4)
+# HOW THE INPUT CONTROL IS CHOSEN
+#   Same day, paired by position: the Nth replicate of a treatment/target/day
+#   (sorted R1, R2, ...) is compared with the Nth input replicate of the same
+#   treatment and day. R numbers need not match (D3 samples R1, R4, R5 get
+#   inputs R1, R2, R3). A D3 sample never uses a D1 input.
+#
+# RERUNNING
+#   Safe to resubmit. A sample is skipped if its .bw already exists. To redo a
+#   sample, delete its .bw first. Samples with no input control are skipped
+#   and the task still reports success.
+#
+# CHECKING THE RESULTS
+#   ls <BW_OUTPUT_DIR>/*.bw | wc -l    # should equal the array size
+#   grep -l "SKIP" logs/*.log          # tasks skipped for no input control
+#
+# BIGWIG SETTINGS
+#   --normalizeUsing BPM, --scaleFactorsMethod None, --operation subtract,
+#   --extendReads 150 (fragment length for paired-end reads), -p 8.
+#
+# NOTES
+#   - The script stops on any error (set -e).
+#   - Paths to check before running: SCRATCH, BAM_INPUT_DIR, BW_OUTPUT_DIR,
+#     TREATMENT_LIST, and the email above.
+################################################################################
+
+set -e
+
+# ----------------------------
+# Environment setup
+# ----------------------------
+SCRATCH=/scratch/alpine/.colostate.edu/c832500103
+PROJ=/projects/c832500103@colostate.edu
+source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not found at ${PROJ}/miniforge3" >&2; exit 1; }
+conda activate ${PROJ}/conda_envs/deeptools_kernel_v2 || { echo "ERROR: conda activate deeptools_kernel_v2 failed" >&2; exit 1; }
+
+# ----------------------------
+# Input/output paths
+# ----------------------------
+BAM_INPUT_DIR="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.3.1_Cxt_BamFiltered"
+MERGED_DIR="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/02_Cxt_Alignment/02.4_Cxt_BamMerged_with_replicate_count"
+BW_OUTPUT_DIR="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/04_Deeptools/00_BigWig_Files_Individual_Bams"
+TREATMENT_LIST="${SCRATCH}/Cxt_Cut_Run_Pipeline/Round1_Round2_With_Duplicates/04_Deeptools/treatment_bam_list.txt"
+
+mkdir -p "$BW_OUTPUT_DIR"
+mkdir -p logs
+
+# ----------------------------
+# Select this task's treatment BAM (task ID 1 = first line)
+# ----------------------------
+treatment_bam=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$TREATMENT_LIST")
+
+if [[ -z "$treatment_bam" ]]; then
+    echo "ERROR: No treatment BAM found for array index $SLURM_ARRAY_TASK_ID"
+    exit 1
+fi
+
+# --- OLD SERIAL VERSION (built + looped through ALL treatments in one job) ---
+# declare -a TREATMENTS
+# for bam_file in "${BAM_INPUT_DIR}"/*-Cxt.bam; do
+#     basename=$(basename "$bam_file")
+#     if [[ "$basename" == *"-IN-"* ]]; then
+#         continue
+#     fi
+#     TREATMENTS+=("$bam_file")
+# done
+# total=${#TREATMENTS[@]}
+# echo "Found $total treatment samples"
+# echo ""
+# count=0
+# for treatment_bam in "${TREATMENTS[@]}"; do
+#     count=$((count + 1))
+# -------------------------------------------------------------------------
+
+basename=$(basename "$treatment_bam" -Cxt.bam)
+treatment=$(echo "$basename" | cut -d'-' -f1)
+
+#-------------------------------------------------------------------------------------------------------
+#These are for merged bams
+#
+#    input_bam="${BAM_INPUT_DIR}/${treatment}-IN-D1-rep"*"-merged-sorted.bam"
+#    input_bam=$(ls "${BAM_INPUT_DIR}/${treatment}-IN-D1-rep"*"-merged-sorted.bam" 2>/dev/null | head -1)
+#-------------------------------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------------------------------
+# TEMPORARY: pairing to ANY available input replicate for this treatment site,
+# not matched by replicate number - not every treatment rep has a same-numbered
+# input yet. Revisit once all input replicates exist and switch to exact
+# rep-matched pairing (see commented-out version below).
+# Same-day input, paired by position: the Nth replicate of this treatment/target/day
+# gets the Nth input replicate of that treatment and day (R numbers need not match).
 day=$(echo "$basename" | cut -d- -f3)
-input_bam=$(ls "${MERGED_DIR}/${treatment}-IN-${day}-"rep*-merged-sorted.bam 2>/dev/null | head -1)
+target=$(echo "$basename" | cut -d- -f2)
+input_bam=$(ls "${MERGED_DIR}/${treatment}-IN-${day}-"rep*-merged-sorted.bam 2>/dev/null | head -1)   # pooled same-day input (Step 2.4)
+# --- exact rep-matched version to swap back in later ---
+# rep=$(echo "$basename" | cut -d'-' -f4)
+# input_bam="${BAM_INPUT_DIR}/${treatment}-IN-D1-${rep}-Cxt.bam"
+#---------------------------------------------------------------------------------------------------------
+
+echo "Task $SLURM_ARRAY_TASK_ID: $basename"
+echo "  treatment: $treatment_bam"
+echo "  input:     $input_bam"
+
+if [[ -z "$input_bam" || ! -f "$input_bam" ]]; then
+    echo "SKIP: $basename (no input control)"
+    exit 0
+fi
+
+# ----------------------------
+# Skip if already done
+# ----------------------------
+output_bw="${BW_OUTPUT_DIR}/${basename}_inputsubtracted.bw"
+if [[ -f "$output_bw" ]]; then
+    echo "EXISTS: $basename"
+    exit 0
+fi
+
+# ----------------------------
+# Create the input-subtracted bigWig
+# ----------------------------
+echo "Creating: $basename (treatment=$treatment_bam, input=$input_bam)"
+bamCompare \
+    -b1 "$treatment_bam" \
+    -b2 "$input_bam" \
+    -o "$output_bw" \
+    --normalizeUsing BPM \
+    --scaleFactorsMethod None \
+    --operation subtract \
+    -p 8 \
+    --extendReads 150
+echo "Done: $basename"
+
+# --- OLD SERIAL VERSION continued (closing loop + final summary) ---
+# done
+# echo ""
+# echo "BigWigs created in: $BW_OUTPUT_DIR"
+# ls -lh "$BW_OUTPUT_DIR"/*.bw
+# -------------------------------------------------------------------------
