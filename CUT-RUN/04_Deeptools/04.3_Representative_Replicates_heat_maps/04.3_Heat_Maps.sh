@@ -135,8 +135,8 @@ BASE_TITLE=$1
 # HEATMAP SETTINGS
 # ============================================================
 COLORMAP="RdBu"
-Z_MIN="-0.6"
-Z_MAX="0.6"
+Z_MIN="-1.0"
+Z_MAX="1.0"
 REF_POINT_LABEL="TSS"
 WHAT_TO_SHOW="heatmap and colorbar"
 
@@ -146,9 +146,9 @@ WHAT_TO_SHOW="heatmap and colorbar"
 # update representative reps in one, update the other)
 # ============================================================
 declare -A REP_MAP=(
-    [BF_AC_D1]="R1"  [BF_AC_D3]="R4"  [BF_ME_D1]="R2"  [BF_ME_D3]="R2"  [BF_SR_D1]="R3"  [BF_SR_D3]="R2"
+    [BF_AC_D1]="R1"  [BF_AC_D3]="R4"  [BF_ME_D1]="R2"  [BF_ME_D3]="R2"  [BF_SR_D1]="R3"  [BF_SR_D3]="R3"
     [MP_AC_D1]="R2"  [MP_AC_D3]="R3"  [MP_ME_D1]="R3"  [MP_ME_D3]="R1"  [MP_SR_D1]="R1"  [MP_SR_D3]="R3"
-    [ZH_AC_D1]="R2"  [ZH_AC_D3]="R1"  [ZH_ME_D1]="R3"  [ZH_ME_D3]="R3"  [ZH_SR_D1]="R1"  [ZH_SR_D3]="R3"
+    [ZH_AC_D1]="R2"  [ZH_AC_D3]="R2"  [ZH_ME_D1]="R3"  [ZH_ME_D3]="R3"  [ZH_SR_D1]="R1"  [ZH_SR_D3]="R3"
     [SF_AC_D1]="R2"  [SF_AC_D3]="R3"  [SF_ME_D1]="R1"  [SF_ME_D3]="R3"  [SF_SR_D1]="R3"  [SF_SR_D3]="R2"
 )
 

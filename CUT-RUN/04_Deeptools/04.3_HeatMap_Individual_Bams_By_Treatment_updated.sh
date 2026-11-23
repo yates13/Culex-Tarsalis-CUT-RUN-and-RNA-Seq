@@ -141,8 +141,8 @@ BASE_TITLE=$1
 # HEATMAP SETTINGS
 # ============================================================
 COLORMAP="RdBu"
-Z_MIN="-0.6"
-Z_MAX="0.6"
+Z_MIN="-1.0"
+Z_MAX="1.0"
 REF_POINT_LABEL="TSS"
 WHAT_TO_SHOW="heatmap and colorbar"
 

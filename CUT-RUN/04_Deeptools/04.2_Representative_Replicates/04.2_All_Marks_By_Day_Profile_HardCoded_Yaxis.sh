@@ -60,7 +60,7 @@
 #                 missing entry, or a replicate that isn't in the matrix, causes
 #                 that group to be left off the plot (a message is printed and
 #                 the job still finishes).
-#   YMIN, YMAX    Shared y-axis range for every plot (currently -0.1 to 0.35,
+#   YMIN, YMAX    Shared y-axis range for every plot (currently -0.1 to 0.4,
 #                 chosen by looking at earlier plots). Change these if new data
 #                 falls outside the range.
 #   MARK_COLORS   One color per group, the same on every plot.
@@ -105,7 +105,7 @@ mkdir -p "$OUTDIR" logs
 
 # Hard-coded shared y-axis range for every graph (from visual inspection of prior plots)
 YMIN="-0.1"
-YMAX="0.35"
+YMAX="0.4"
 
 # ============================================================
 # One color per mark (BF, MP, ZH, SF) — consistent across every plot
@@ -122,9 +122,9 @@ declare -A MARK_COLORS=(
 # Note: actual sample names use "R1", "R2", "R3"... not "Rep1", "Rep2"...
 # ============================================================
 declare -A REP_MAP=(
-    [BF_AC_D1]="R1"  [BF_AC_D3]="R4"  [BF_ME_D1]="R2"  [BF_ME_D3]="R2"  [BF_SR_D1]="R3"  [BF_SR_D3]="R2"
+    [BF_AC_D1]="R1"  [BF_AC_D3]="R4"  [BF_ME_D1]="R2"  [BF_ME_D3]="R2"  [BF_SR_D1]="R3"  [BF_SR_D3]="R3"
     [MP_AC_D1]="R2"  [MP_AC_D3]="R3"  [MP_ME_D1]="R3"  [MP_ME_D3]="R1"  [MP_SR_D1]="R1"  [MP_SR_D3]="R3"
-    [ZH_AC_D1]="R2"  [ZH_AC_D3]="R1"  [ZH_ME_D1]="R3"  [ZH_ME_D3]="R3"  [ZH_SR_D1]="R1"  [ZH_SR_D3]="R3"
+    [ZH_AC_D1]="R2"  [ZH_AC_D3]="R2"  [ZH_ME_D1]="R3"  [ZH_ME_D3]="R3"  [ZH_SR_D1]="R1"  [ZH_SR_D3]="R3"
     [SF_AC_D1]="R2"  [SF_AC_D3]="R3"  [SF_ME_D1]="R1"  [SF_ME_D3]="R3"  [SF_SR_D1]="R3"  [SF_SR_D3]="R2"
 )
 
