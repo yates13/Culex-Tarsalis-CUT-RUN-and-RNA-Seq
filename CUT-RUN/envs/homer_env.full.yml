@@ -1,0 +1,47 @@
+name: homer_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - _openmp_mutex=4.5
+  - bedtools=2.31.1
+  - bzip2=1.0.8
+  - ca-certificates=2026.7.22
+  - homer=4.11
+  - ld_impl_linux-64=2.46.1
+  - libexpat=2.8.1
+  - libffi=3.7.0
+  - libgcc=16.2.0
+  - libgcc-ng=16.2.0
+  - libgomp=16.2.0
+  - libidn2=2.3.8
+  - liblzma=5.8.3
+  - libnsl=2.0.1
+  - libopenssl-static=3.6.4
+  - libpng=1.6.58
+  - libsqlite=3.53.4
+  - libstdcxx=16.2.0
+  - libstdcxx-ng=16.2.0
+  - libunistring=0.9.10
+  - libuuid=2.42.3
+  - libxcrypt=4.4.38
+  - libzlib=1.3.2
+  - mysql-connector-c=6.1.11
+  - ncurses=6.6
+  - openssl=3.6.4
+  - packaging=26.3
+  - pcre2=10.47
+  - perl=5.32.1
+  - pip=26.2.1
+  - python=3.10.21
+  - readline=8.3
+  - setuptools=84.0.0
+  - tk=8.6.13
+  - tzdata=2026c
+  - ucsc-bedgraphtobigwig=482
+  - unzip=6.0
+  - wget=1.25.0
+  - wheel=0.48.0
+  - zlib=1.3.2
+  - zstd=1.5.7

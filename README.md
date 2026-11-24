@@ -45,22 +45,24 @@ To view tracks in IGV, see [`IGV_ChIP-Seq_Instructions.pdf`](CUT-RUN/IGV_ChIP-Se
 
 Each step activates its own conda environment.
 
-| Environment | Used in |
-|-------------|---------|
-| `fastp_env` | Step 1.1, trimming |
-| `multiqc_env` | Step 1.2 and Step 2.2.5, MultiQC |
-| `hisat2_env_fixed` | Steps 2.1 to 2.4, HISAT2 and samtools (activate through the `/projects` path without `@`, see Known issues) |
-| `macs2_env` | Step 3, peak calling |
-| `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` |
+| Environment | Used in | Main tools (2026-11 rerun) | Exact versions |
+|-------------|---------|------------|----------------|
+| `fastp_env` | Step 1.1, trimming | fastp 1.4.0 | [here](CUT-RUN/envs/fastp_env.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/fastp_env.full.yml) |
+| `multiqc_env` | Step 1.2 and Step 2.2.5, MultiQC | MultiQC 1.35 | [here](CUT-RUN/envs/multiqc_env.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/multiqc_env.full.yml) |
+| `hisat2_env_fixed` | Steps 2.1 to 2.4, HISAT2 and samtools (activate through the `/projects` path without `@`, see Known issues) | HISAT2, samtools | [here](CUT-RUN/envs/hisat2_env_fixed.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/hisat2_env_fixed.full.yml) |
+| `macs2_env` | Step 3, peak calling | MACS2 2.2.9.1 | [here](CUT-RUN/envs/macs2_env.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/macs2_env.full.yml) |
+| `deeptools_kernel_v2` | Step 4, see `How_to_make_deeptools_kernel_env.md` | deepTools 4.0.0 | [here](CUT-RUN/envs/deeptools_kernel_v2.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/deeptools_kernel_v2.full.yml) |
+| `homer_env` | Step 3.0 only (bedtools for the supplementary Greenscreen check) | bedtools 2.31.1 | [here](CUT-RUN/envs/homer_env.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/homer_env.full.yml) |
+| `diffbind_env` | Step 5, DiffBind | DiffBind 3.20.0, edgeR 4.8.2 | [here](CUT-RUN/envs/diffbind_env.full.yml) · [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs/blob/main/envs/locked/diffbind_env.full.yml) |
 
-The environment specs are kept in a separate repository, [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs): one `.yml` file per environment in `envs/`, plus scripts to build and check them in `/projects`. This pipeline needs five: `fastp_env`, `multiqc_env`, `hisat2_env_fixed`, `macs2_env` and `deeptools_kernel_v2`. The `multiqc_env` and `hisat2_env_fixed` specs are not in Alpine_Conda_Envs yet. That repository's README also explains how to install Miniforge first. To build the environments:
+The environment specs are kept in a separate repository, [Alpine_Conda_Envs](https://github.com/yates13/Alpine_Conda_Envs): one `.yml` file per environment in `envs/`, exact-version snapshots in `envs/locked/`, `projects/CUT-RUN.txt` listing the seven envs this pipeline uses, and scripts to build and check them in `/projects`. The snapshots used for the 2026-11 rerun are also frozen in this repo in [`CUT-RUN/envs/`](CUT-RUN/envs/). After any rebuild of `hisat2_env_fixed`, redo the "@" fix in its `Config_heavy.pl` (see the Alpine_Conda_Envs README). That repository's README also explains how to install Miniforge first. To build the environments:
 
 ```bash
 cd /projects/<your_username>
 git clone https://github.com/yates13/Alpine_Conda_Envs.git
 cd Alpine_Conda_Envs
 bash scripts/setup_conda.sh                  # one time: sends envs and the package cache to /projects
-sbatch scripts/build_envs.sbatch fastp_env   # repeat for multiqc_env, hisat2_env_fixed, macs2_env, deeptools_kernel_v2
+sbatch scripts/build_envs.sbatch fastp_env   # repeat for multiqc_env, hisat2_env_fixed, macs2_env, homer_env, deeptools_kernel_v2, diffbind_env
 bash scripts/verify_envs.sh                  # confirms each environment is intact
 ```
 
