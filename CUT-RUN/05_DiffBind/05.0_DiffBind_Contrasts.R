@@ -29,7 +29,7 @@
 # Settings (see SETTINGS below): edgeR; library-size normalization (DiffBind
 #   default); no blacklist/greylist (no blacklist exists for Culex; matches the
 #   Aedes paper); control reads subtracted (DiffBind default with controls);
-#   summits: AC/SR re-centred to +/-200 bp (DiffBind default for narrow peaks),
+#   summits: FALSE for all marks (full peak widths, as in the original scripts);
 #   ME full peak width (broad domains).
 ################################################################################
 
@@ -70,7 +70,7 @@ OUT_BASE   <- file.path(RUN, "05_DiffBind_2026-11-24")
 DAYS     <- c("D1", "D3")
 MARKS    <- c("AC", "ME", "SR")
 PAIRS    <- list(c("ZH", "BF"), c("MP", "BF"), c("BF", "SF"))
-SUMMITS  <- list(AC = 200, ME = FALSE, SR = 200)
+SUMMITS  <- list(AC = FALSE, ME = FALSE, SR = FALSE)   # full peak widths, as in the original DiffBind scripts
 MIN_REPS <- 2          # stop if a site has fewer replicates than this
 PEAK_MODE <- "pooled"  # "pooled" = Step 3.1 (default); "per_replicate" = Step 3.3 (not run)
 
