@@ -15,7 +15,7 @@
 #              (one file per site/mark/day, used for all of that condition's
 #              replicates), chosen to stay close to the Aedes paper. "per_replicate" uses 3.3
 #              (not run yet) if it is ever needed.
-#   bamControl the SAME-DAY pooled input, Step 2.4 (same control as Step 3.1)
+#   bamControl not used (USE_CONTROLS = FALSE), as in the original sample sheets
 #   The contrast is chosen by the Condition column (site), not by row number.
 #
 # Output (NEW folder per day; a contrast stops if its CSV already exists):
@@ -28,7 +28,7 @@
 #
 # Settings (see SETTINGS below): edgeR; library-size normalization (DiffBind
 #   default); no blacklist/greylist (no blacklist exists for Culex; matches the
-#   Aedes paper); control reads subtracted (DiffBind default with controls);
+#   Aedes paper); no input controls in the sheet (as in the original scripts);
 #   summits: FALSE for all marks (full peak widths, as in the original scripts);
 #   ME full peak width (broad domains).
 ################################################################################
@@ -73,6 +73,7 @@ PAIRS    <- list(c("ZH", "BF"), c("MP", "BF"), c("BF", "SF"))
 SUMMITS  <- list(AC = FALSE, ME = FALSE, SR = FALSE)   # full peak widths, as in the original DiffBind scripts
 MIN_REPS <- 2          # stop if a site has fewer replicates than this
 PEAK_MODE <- "pooled"  # "pooled" = Step 3.1 (default); "per_replicate" = Step 3.3 (not run)
+USE_CONTROLS <- FALSE  # original sheets had no bamControl; TRUE adds the same-day pooled input
 
 contrasts <- do.call(rbind, lapply(DAYS, function(d)
   do.call(rbind, lapply(MARKS, function(m)
@@ -101,7 +102,7 @@ if (file.exists(outCSV)) stop("Output already exists, nothing overwritten: ", ou
 # Build the sample sheet from the files that exist, and check every path
 # ------------------------------------------------------------------------------
 peakExt    <- if (ct$mark == "ME") "broadPeak" else "narrowPeak"
-peakCaller <- if (ct$mark == "ME") "bed" else "narrow"
+peakCaller <- "macs"   # as in the original sample sheets
 
 rowsFor <- function(site) {
   pat  <- sprintf("^%s-%s-%s-R[0-9]+-Cxt\\.bam$", site, ct$mark, ct$day)
@@ -141,9 +142,10 @@ missing <- need[!file.exists(need)]
 if (length(missing) > 0) stop("Missing files:\n  ", paste(missing, collapse = "\n  "))
 # Same-day check: every control must be from the sample's own day
 stopifnot(all(grepl(paste0("-IN-", ct$day, "-"), basename(sheet$bamControl))))
+if (!USE_CONTROLS) sheet <- sheet[, setdiff(names(sheet), c("ControlID", "bamControl"))]   # original sheets had no controls
 
 write.csv(sheet, file.path(outDir, paste0(ct$name, "_samplesheet.csv")), row.names = FALSE)
-print(sheet[, c("SampleID", "Condition", "Replicate", "ControlID")])
+print(sheet[, c("SampleID", "Condition", "Replicate")])
 
 # ------------------------------------------------------------------------------
 # DiffBind
