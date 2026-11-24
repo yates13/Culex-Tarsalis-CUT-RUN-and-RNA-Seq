@@ -234,7 +234,7 @@ for TARGET in AC ME SR; do
             --samplesLabel "${LABELS[@]}" \
             -T "$TITLE" \
             --zMin "$Z_MIN" \
-            --zMax "$Z_MAX" \
+            --zMax "$Z_MAX" --missingDataColor white \
             --dpi 300 \
             --regionsLabel " "
 

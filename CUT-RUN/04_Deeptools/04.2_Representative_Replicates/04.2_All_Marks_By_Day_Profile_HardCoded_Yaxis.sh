@@ -201,7 +201,7 @@ for TARGET in AC ME SR; do
             --colors "${COLORS[@]}" \
             --samplesLabel "${LABELS[@]}" \
             --regionsLabel "" \
-            -T "${TARGET} ${DAY} — All Marks (BF, MP, ZH, SF)" \
+            -T "${TARGET} ${DAY} — All sites (BF, MP, ZH, SF)" \
             -y "Input-subtracted signal (BPM)" \
             --yMin "$YMIN" \
             --yMax "$YMAX" \

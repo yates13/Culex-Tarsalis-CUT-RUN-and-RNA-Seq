@@ -230,7 +230,7 @@ for pair in "${TREATMENTS[@]}"; do
         --samplesLabel "${GROUP_SAMPLES[@]}" \
         -T "$TITLE" \
         --zMin "$Z_MIN" \
-        --zMax "$Z_MAX" \
+        --zMax "$Z_MAX" --missingDataColor white \
         --dpi 300 \
         --regionsLabel " "
 

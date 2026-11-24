@@ -34,7 +34,7 @@
 #   paths relative to the folder you submit from.
 #   bw_chunks/       Input. Must contain one chunk_<GROUP>.txt per group.
 #   logs/            Job logs. Must exist before submitting.
-#   REFERENCE_BED    <path>/00_Cxt_Genome/Genome_gff/CtarK1_TSS_excl_gene5911.bed (outside the repo; CtarK1_TSS.bed minus gene5911, a target-independent artifact at a contig start)
+#   REFERENCE_BED    <path>/00_Cxt_Genome/Genome_gff/CtarK1_TSS_excl_artifacts.bed (outside the repo; CtarK1_TSS.bed minus gene5911, gene2811, gene12689: target-independent artifacts, top 1% in >=75% of samples and in every target x day)
 #
 # BEFORE SUBMITTING (run from 04_Deeptools)
 #   1. mkdir -p logs
@@ -101,7 +101,7 @@ BIGWIGS=$(cat "$CHUNK")
 # ----------------------------
 # Reference regions
 # ----------------------------
-REFERENCE_BED="${SCRATCH}/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS_excl_gene5911.bed"
+REFERENCE_BED="${SCRATCH}/Cxt_Cut_Run_Pipeline/00_Cxt_Genome/Genome_gff/CtarK1_TSS_excl_artifacts.bed"
 
 # ----------------------------
 # Sample labels (bigWig name without _inputsubtracted.bw)
