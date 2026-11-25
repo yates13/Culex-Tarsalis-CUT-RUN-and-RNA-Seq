@@ -9,12 +9,12 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=32G
-#SBATCH --array=1-18
+#SBATCH --array=1-24
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=shawn.yates@colostate.edu
 
 ################################################################################
-# STEP 5.0: DiffBind, one array task per contrast (18 = 2 days x 3 marks x 3 pairs)
+# STEP 5.0: DiffBind, one array task per contrast (24 = 2 days x 3 marks x 4 pairs)
 #
 # RUNS:    05.0_DiffBind_Contrasts.R <task number>   (same folder as this script)
 #          "Rscript 05.0_DiffBind_Contrasts.R list" prints which number is which.

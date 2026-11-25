@@ -1,8 +1,8 @@
 ################################################################################
 # STEP 5.0: DiffBind differential peaks (edgeR), one contrast per run
 #
-# Usage:   Rscript 05.0_DiffBind_Contrasts.R <contrast number 1-18>
-#          Rscript 05.0_DiffBind_Contrasts.R list      # print the 18 contrasts
+# Usage:   Rscript 05.0_DiffBind_Contrasts.R <contrast number 1-24>
+#          Rscript 05.0_DiffBind_Contrasts.R list      # print the 24 contrasts
 #          (on Alpine this is run by 05.0_DiffBind_array.sh, one array task each)
 #
 # Contrasts (same 9 per day as the getGeneDistances runs):
@@ -69,7 +69,7 @@ OUT_BASE   <- file.path(RUN, "05_DiffBind_2026-11-24")
 # ==============================================================================
 DAYS     <- c("D1", "D3")
 MARKS    <- c("AC", "ME", "SR")
-PAIRS    <- list(c("ZH", "BF"), c("MP", "BF"), c("BF", "SF"))
+PAIRS    <- list(c("ZH", "BF"), c("MP", "BF"), c("BF", "SF"), c("ZH", "MP"))
 SUMMITS  <- list(AC = FALSE, ME = FALSE, SR = FALSE)   # full peak widths, as in the original DiffBind scripts
 MIN_REPS <- 2          # stop if a site has fewer replicates than this
 PEAK_MODE <- "pooled"  # "pooled" = Step 3.1 (default); "per_replicate" = Step 3.3 (not run)
