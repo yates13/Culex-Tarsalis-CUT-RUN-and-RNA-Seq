@@ -1,7 +1,7 @@
 ################################################################################
-# STEP 5.1: Summarize the 18 DiffBind contrasts (table + figure)
+# STEP 5.1: Summarize the DiffBind contrasts (table + figure)
 #
-# Usage:   Rscript 05.1_DiffBind_Summary.R <DiffBind output folder> [FDR cutoff, default 0.1]
+# Usage:   Rscript 05.1_DiffBind_Summary.R <DiffBind output folder> [FDR cutoff, default 0.1] [output folder, default = input folder]
 #          e.g. Rscript 05.1_DiffBind_Summary.R .../05_DiffBind_2026-11-24 0.1
 #
 # Reads:   <folder>/d1/*-OUT.csv and <folder>/d3/*-OUT.csv (Step 5.0 output, th = 1)
@@ -20,6 +20,7 @@ suppressPackageStartupMessages(library(ggplot2))
 args    <- commandArgs(trailingOnly = TRUE)
 DIR     <- if (length(args) >= 1) args[1] else "."
 FDR_CUT <- if (length(args) >= 2) as.numeric(args[2]) else 0.1
+OUT_DIR <- if (length(args) >= 3) args[3] else DIR
 
 files <- Sys.glob(file.path(DIR, c("d1", "d3"), "*-OUT.csv"))
 if (length(files) == 0) stop("No *-OUT.csv files under ", DIR, "/d1 or /d3")
@@ -37,16 +38,17 @@ rows <- lapply(files, function(f) {
 })
 s <- do.call(rbind, rows)
 s$comparison <- paste(s$site1, "vs", s$site2)
-s <- s[order(s$day, s$mark, match(s$comparison, c("ZH vs BF", "MP vs BF", "BF vs SF"))), ]
+s <- s[order(s$day, s$mark, match(s$comparison, c("ZH vs BF", "MP vs BF", "BF vs SF", "ZH vs MP"))), ]
 
-out_tsv <- file.path(DIR, sprintf("DiffBind_summary_FDR%s.tsv", FDR_CUT))
+out_tsv <- file.path(OUT_DIR, sprintf("DiffBind_summary_FDR%s.tsv", FDR_CUT))
+if (file.exists(out_tsv)) stop("Output already exists, nothing overwritten: ", out_tsv)
 write.table(s, out_tsv, sep = "\t", quote = FALSE, row.names = FALSE)
 print(s[, c("contrast", "sites", "sig", "higher_site1", "higher_site2", "pct_sig")], row.names = FALSE)
 
 long <- rbind(
   data.frame(s[, c("comparison", "mark", "day")], direction = "Higher in first site",  n =  s$higher_site1),
   data.frame(s[, c("comparison", "mark", "day")], direction = "Higher in second site", n = -s$higher_site2))
-long$comparison <- factor(long$comparison, levels = c("ZH vs BF", "MP vs BF", "BF vs SF"))
+long$comparison <- factor(long$comparison, levels = c("ZH vs BF", "MP vs BF", "BF vs SF", "ZH vs MP"))
 long$mark <- factor(long$mark, levels = c("AC", "ME", "SR"),
                     labels = c("H3K27ac (AC)", "H3K9me3 (ME)", "SREBP (SR)"))
 long$lab  <- ifelse(long$n == 0, "", format(abs(long$n), big.mark = ",", trim = TRUE))
@@ -70,6 +72,6 @@ p <- ggplot(long, aes(x = comparison, y = n, fill = direction)) +
   theme_bw(base_size = 10) +
   theme(legend.position = "bottom", axis.text.x = element_text(angle = 30, hjust = 1))
 
-ggsave(file.path(DIR, sprintf("DiffBind_summary_FDR%s.pdf", FDR_CUT)), p, width = 9, height = 6)
-ggsave(file.path(DIR, sprintf("DiffBind_summary_FDR%s.png", FDR_CUT)), p, width = 9, height = 6, dpi = 200)
+ggsave(file.path(OUT_DIR, sprintf("DiffBind_summary_FDR%s.pdf", FDR_CUT)), p, width = 9, height = 6)
+ggsave(file.path(OUT_DIR, sprintf("DiffBind_summary_FDR%s.png", FDR_CUT)), p, width = 9, height = 6, dpi = 200)
 cat("Wrote:", out_tsv, "and the .pdf/.png next to it\n")
