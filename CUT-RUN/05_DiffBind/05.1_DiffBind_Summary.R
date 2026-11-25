@@ -51,13 +51,15 @@ long$mark <- factor(long$mark, levels = c("AC", "ME", "SR"),
                     labels = c("H3K27ac (AC)", "H3K9me3 (ME)", "SREBP (SR)"))
 long$lab  <- ifelse(long$n == 0, "", format(abs(long$n), big.mark = ",", trim = TRUE))
 long$vj   <- ifelse(long$n > 0, -0.3, 1.3)
+zeros <- unique(long[ave(abs(long$n), long$comparison, long$mark, long$day, FUN = sum) == 0, c("comparison", "mark", "day")])   # contrasts tested with 0 sites
 
 p <- ggplot(long, aes(x = comparison, y = n, fill = direction)) +
   geom_col(width = 0.7) +
   geom_hline(yintercept = 0, linewidth = 0.3) +
   geom_text(aes(label = lab, vjust = vj), size = 2.6) +
+  geom_text(data = zeros, aes(x = comparison, y = 0, label = "0"), inherit.aes = FALSE, vjust = -0.4, size = 2.6, colour = "grey40") +
   scale_y_continuous(trans = scales::pseudo_log_trans(base = 10),
-                     breaks = c(-30000, -1000, -100, -10, 0, 10, 100, 1000, 30000),
+                     breaks = c(-10000, -1000, -100, -10, 0, 10, 100, 1000, 10000), expand = expansion(mult = 0.12),
                      labels = function(b) format(abs(b), big.mark = ",", scientific = FALSE, trim = TRUE)) +
   facet_grid(day ~ mark) +
   scale_fill_manual(values = c("Higher in first site" = "#3B6FB6", "Higher in second site" = "#A8A8A8")) +
