@@ -73,11 +73,11 @@
 #   dba.normalize(db) default (library size); method = DBA_EDGER;
 #   bBlacklist/bGreylist = FALSE (no Culex blacklist); th = 1 in dba.report.
 #
-# KNOWN ISSUE (not fixed in this script): the 2nd dba.plotPCA call (contrast
-#   PCA) has no method = DBA_EDGER, so that page is missing from every
-#   _plots.pdf (log: "DESeq2 analysis has not been run for this contrast").
-#   The CSVs are not affected. 05_PCA_all18_FDR01_03_2026-11-25.R redraws the
-#   PCAs from the saved _analysis.RDS files.
+# FIXED 2026-11-27: the 2nd dba.plotPCA call (contrast PCA) now has
+#   method = DBA_EDGER. Before this fix the page was missing from every
+#   _plots.pdf (log: "DESeq2 analysis has not been run for this contrast"),
+#   including all 24 contrasts in 05_DiffBind_2026-11-24; the CSVs were not
+#   affected. Those PCAs were redrawn by the 05_PCA_all24_* scripts.
 #
 # NOTE ON INTERPRETATION (2026-11-25 diagnostics): with pooled per-group peaks
 #   the consensus is the union of the two groups' peak sets, and almost all
@@ -220,7 +220,7 @@ saveRDS(db, file.path(outDir, paste0(ct$name, "_analysis.RDS")))
 
 pdf(file.path(outDir, paste0(ct$name, "_plots.pdf")), width = 7, height = 7)
 try(dba.plotPCA(db, attributes = DBA_CONDITION, label = DBA_ID))
-try(dba.plotPCA(db, contrast = 1, th = 1, attributes = DBA_CONDITION, label = DBA_ID))   # KNOWN ISSUE: needs method = DBA_EDGER (see header)
+try(dba.plotPCA(db, contrast = 1, method = DBA_EDGER, th = 1, attributes = DBA_CONDITION, label = DBA_ID))   # fixed 2026-11-27: method = DBA_EDGER (see header)
 try(dba.plotMA(db, contrast = 1, method = DBA_EDGER))
 try(dba.plotVolcano(db, contrast = 1, method = DBA_EDGER))
 dev.off()
