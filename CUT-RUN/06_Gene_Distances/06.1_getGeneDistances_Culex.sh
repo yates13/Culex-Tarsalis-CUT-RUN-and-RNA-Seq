@@ -13,7 +13,7 @@
 #SBATCH --mail-user=shawn.yates@colostate.edu
 
 ################################################################################
-# STEP 6.1: peak-to-gene distances for the 18 DiffBind contrasts (one job)
+# STEP 6.1: peak-to-gene distances for the 24 DiffBind contrasts (one job)
 #
 # RUNS:    06.1_getGeneDistances_Culex_Alpine.R (same folder as this script)
 # NEEDS:   Step 6.0 (CtarK1_MAKER_genes.gtf) and Step 5.0 (DiffBind CSVs)

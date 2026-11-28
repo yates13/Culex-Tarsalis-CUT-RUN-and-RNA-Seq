@@ -1,5 +1,5 @@
 ################################################################################
-# STEP 6.1 (ALPINE): peak-to-gene distances for the 18 DiffBind contrasts
+# STEP 6.1 (ALPINE): peak-to-gene distances for the 24 DiffBind contrasts (18 vs BF/SF + 6 ZH vs MP)
 #
 # Alpine version of getGeneDistances_Culex_SY_Main_GTF_v3_offset.R. The
 # functions are the same as that script; only the CONFIG at the bottom differs
@@ -449,7 +449,7 @@ runDay <- function(cfg, runs, dayTag) {
   for (run in names(runs)) {
     peakFile <- file.path(cfg$peakDir, runs[[run]])
     contrast <- sub(".*_vs_([A-Za-z]+)-OUT\\.csv$", "\\1", runs[[run]])   # "BF" or "SF"
-    sampName <- paste0(run, "_", dayTag, "_vs_", contrast, "_FDR_", cfg$fdr, "_", gtfTag)
+    sampName <- paste0(sub("-OUT\\.csv$", "", runs[[run]]), "_FDR_", cfg$fdr, "_", gtfTag)
 
     if (!file.exists(peakFile)) {
       warning("Missing peak file, skipping ", run, ": ", peakFile)
@@ -501,7 +501,10 @@ runs <- c(
   MP_SR = "MP_SR_d1_vs_BF-OUT.csv",
   BF_AC = "BF_AC_d1_vs_SF-OUT.csv",
   BF_ME = "BF_ME_d1_vs_SF-OUT.csv",
-  BF_SR = "BF_SR_d1_vs_SF-OUT.csv"
+  BF_SR = "BF_SR_d1_vs_SF-OUT.csv",
+  ZH_AC_vsMP = "ZH_AC_d1_vs_MP-OUT.csv",
+  ZH_ME_vsMP = "ZH_ME_d1_vs_MP-OUT.csv",
+  ZH_SR_vsMP = "ZH_SR_d1_vs_MP-OUT.csv"
 )
 print(data.frame(run = names(runs), exists = file.exists(file.path(cfg$peakDir, runs))), row.names = FALSE)
 results <- runDay(cfg, runs, "d1")
@@ -523,10 +526,13 @@ runs_d3 <- c(
   MP_SR = "MP_SR_d3_vs_BF-OUT.csv",
   BF_AC = "BF_AC_d3_vs_SF-OUT.csv",
   BF_ME = "BF_ME_d3_vs_SF-OUT.csv",
-  BF_SR = "BF_SR_d3_vs_SF-OUT.csv"
+  BF_SR = "BF_SR_d3_vs_SF-OUT.csv",
+  ZH_AC_vsMP = "ZH_AC_d3_vs_MP-OUT.csv",
+  ZH_ME_vsMP = "ZH_ME_d3_vs_MP-OUT.csv",
+  ZH_SR_vsMP = "ZH_SR_d3_vs_MP-OUT.csv"
 )
 print(data.frame(run = names(runs_d3), exists = file.exists(file.path(cfg_d3$peakDir, runs_d3))), row.names = FALSE)
 results_d3 <- runDay(cfg_d3, runs_d3, "d3")
 
-writeLines(capture.output(sessionInfo()), "sessionInfo_06.1.txt")
+writeLines(capture.output(sessionInfo()), paste0("sessionInfo_06.1_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".txt"))   # timestamped: never overwritten
 cat("\nDone. Output in", OUT_DIR, "\n")
