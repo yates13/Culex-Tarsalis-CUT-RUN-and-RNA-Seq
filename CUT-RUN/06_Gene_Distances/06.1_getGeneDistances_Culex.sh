@@ -30,4 +30,4 @@ source ${PROJ}/miniforge3/etc/profile.d/conda.sh || { echo "ERROR: conda.sh not 
 conda activate ${PROJ}/conda_envs/diffbind_env || { echo "ERROR: conda activate diffbind_env failed" >&2; exit 1; }
 
 SCRIPT_DIR=/scratch/alpine/c832500103@colostate.edu/Cxt_Cut_Run_Pipeline/Culex-Tarsalis-CUT-RUN-and-RNA-Seq/CUT-RUN/06_Gene_Distances
-Rscript "${SCRIPT_DIR}/06.1_getGeneDistances_Culex_Alpine.R"
+Rscript "${SCRIPT_DIR}/06.1_getGeneDistances_Culex_Alpine.R" "$@"   # optional FDR cutoff, e.g. sbatch 06.1_getGeneDistances_Culex.sh 0.3

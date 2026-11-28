@@ -434,6 +434,7 @@ OUT_DIR <- file.path(RUN, "06_Gene_Distances_2026-11-24")    # NEW output folder
 
 sharedGtfFile <- file.path(PIPE, "00_Cxt_Genome/Genome_gff/CtarK1_MAKER_genes.gtf")   # Step 6.0
 gtfTag <- tools::file_path_sans_ext(basename(sharedGtfFile))
+FDR_CUT <- suppressWarnings(as.numeric(commandArgs(trailingOnly = TRUE)[1])); if (is.na(FDR_CUT)) FDR_CUT <- 0.1   # [EDIT] FDR cutoff from the command line (default 0.1; e.g. sbatch 06.1_getGeneDistances_Culex.sh 0.3)
 
 if (!file.exists(sharedGtfFile)) stop("GTF not found (run Step 6.0 first): ", sharedGtfFile)
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
@@ -488,7 +489,7 @@ runDay <- function(cfg, runs, dayTag) {
 cfg <- list(
   gtf      = sharedGtfFile,
   peakDir  = file.path(DIFF, "d1"),
-  fdr      = 0.1,
+  fdr      = FDR_CUT,
   distance = 2000,
   exclude  = "^Mt$"
 )
@@ -513,7 +514,7 @@ results <- runDay(cfg, runs, "d1")
 cfg_d3 <- list(
   gtf      = sharedGtfFile,
   peakDir  = file.path(DIFF, "d3"),
-  fdr      = 0.1,
+  fdr      = FDR_CUT,
   distance = 2000,
   exclude  = "^Mt$"
 )
