@@ -477,7 +477,10 @@ runs <- c(
   MP_SR = "MP_SR_d1_vs_BF-OUT.csv",
   BF_AC = "BF_AC_d1_vs_SF-OUT.csv",
   BF_ME = "BF_ME_d1_vs_SF-OUT.csv",
-  BF_SR = "BF_SR_d1_vs_SF-OUT.csv"
+  BF_SR = "BF_SR_d1_vs_SF-OUT.csv",
+  ZH_AC_vsMP = "ZH_AC_d1_vs_MP-OUT.csv",
+  ZH_ME_vsMP = "ZH_ME_d1_vs_MP-OUT.csv",
+  ZH_SR_vsMP = "ZH_SR_d1_vs_MP-OUT.csv"
 )
 
 # confirm everything exists before running
@@ -505,7 +508,7 @@ for (run in names(runs)) {
       excludeContig = cfg$exclude,
       featureFilter = "gene",
       fdrFilter     = cfg$fdr,
-      sampName = paste0(run, "_d1_vs_", contrast, "_FDR_", cfg$fdr, "_", gtfTag),
+      sampName = paste0(sub("-OUT\\.csv$", "", runs[[run]]), "_FDR_", cfg$fdr, "_", gtfTag),
       verbose       = FALSE
     ),
     error = function(e) { warning(run, " failed: ", conditionMessage(e)); NULL }
@@ -538,7 +541,10 @@ runs_d3 <- c(
   MP_SR = "MP_SR_d3_vs_BF-OUT.csv",
   BF_AC = "BF_AC_d3_vs_SF-OUT.csv",
   BF_ME = "BF_ME_d3_vs_SF-OUT.csv",
-  BF_SR = "BF_SR_d3_vs_SF-OUT.csv"
+  BF_SR = "BF_SR_d3_vs_SF-OUT.csv",
+  ZH_AC_vsMP = "ZH_AC_d3_vs_MP-OUT.csv",
+  ZH_ME_vsMP = "ZH_ME_d3_vs_MP-OUT.csv",
+  ZH_SR_vsMP = "ZH_SR_d3_vs_MP-OUT.csv"
 )
 
 # confirm everything exists before running
@@ -566,7 +572,7 @@ for (run in names(runs_d3)) {
       excludeContig = cfg_d3$exclude,
       featureFilter = "gene",
       fdrFilter     = cfg_d3$fdr,
-      sampName = paste0(run, "_d3_vs_", contrast, "_FDR_", cfg_d3$fdr, "_", gtfTag),
+      sampName = paste0(sub("-OUT\\.csv$", "", runs_d3[[run]]), "_FDR_", cfg_d3$fdr, "_", gtfTag),
       verbose       = FALSE
     ),
     error = function(e) { warning(run, " failed: ", conditionMessage(e)); NULL }
